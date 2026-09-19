@@ -1,3 +1,8 @@
+import dns from "node:dns";
+
+// Ensure IPv4 first on Windows to prevent Atlas SRV DNS/TLS timeouts
+dns.setDefaultResultOrder("ipv4first");
+
 import { app } from "./app";
 import { connectMongoDB } from "./config/mongodb";
 import { connectNeo4j } from "./config/neo4j";

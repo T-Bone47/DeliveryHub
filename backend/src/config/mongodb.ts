@@ -24,9 +24,11 @@ export async function connectMongoDB(): Promise<MongoClient> {
     const isDirect = env.mongodbUri.includes("directConnection=true");
     const nextClient = new MongoClient(env.mongodbUri, {
       ...(isDirect ? { directConnection: true, tlsInsecure: true } : {}),
-      maxPoolSize: 1,
+      maxPoolSize: 10,
       minPoolSize: 1,
       serverSelectionTimeoutMS: env.mongodbServerSelectionTimeoutMs,
+      connectTimeoutMS: 15000,
+      socketTimeoutMS: 45000,
       retryWrites: true,
       retryReads: true,
     });
