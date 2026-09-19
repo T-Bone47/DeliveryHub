@@ -2,7 +2,8 @@ const puppeteer = require('puppeteer');
 const path = require('path');
 const fs = require('fs');
 
-const ARTIFACT_DIR = 'C:\\Users\\olive\\.gemini\\antigravity-ide\\brain\\e0d41da5-4ac0-42a0-8de9-4be5f6177cec';
+const ARTIFACT_DIR = process.env.ARTIFACT_DIR || 'C:\\Users\\olive\\.gemini\\antigravity-ide\\brain\\4608294d-57d8-427f-b9c9-e02c858f9c89';
+if (!fs.existsSync(ARTIFACT_DIR)) fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 

@@ -2,7 +2,8 @@ const puppeteer = require('puppeteer');
 const path = require('path');
 const fs = require('fs');
 
-const ARTIFACTS_DIR = 'C:\\Users\\olive\\.gemini\\antigravity-ide\\brain\\16c8d526-521a-4d25-be76-0a52ffa53ca3';
+const ARTIFACTS_DIR = process.env.ARTIFACT_DIR || 'C:\\Users\\olive\\.gemini\\antigravity-ide\\brain\\4608294d-57d8-427f-b9c9-e02c858f9c89';
+if (!fs.existsSync(ARTIFACTS_DIR)) fs.mkdirSync(ARTIFACTS_DIR, { recursive: true });
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function runBrowserDemo() {
@@ -27,6 +28,8 @@ async function runBrowserDemo() {
     await page.screenshot({ path: filePath, fullPage: true });
     console.log(`  📸 Screenshot saved: ${filename}`);
   }
+
+  let targetPkgId;
 
   try {
     // 1. Customer Login
@@ -57,6 +60,8 @@ async function runBrowserDemo() {
       throw new Error('DLV-DEMO-0005 link not found on Deliveries page.');
     }
     await page.waitForSelector('.stepper-card, .page-header');
+    targetPkgId = await page.evaluate(() => window.location.pathname.split('/').pop());
+    console.log(`     Target Package ID: ${targetPkgId}`);
     await sleep(1000);
     await takeShot('01_customer_assigned_delivery.png');
 
@@ -197,13 +202,39 @@ async function runBrowserDemo() {
 
     await page.goto('http://localhost:4200/admin/deliveries', { waitUntil: 'networkidle0' });
     await page.waitForSelector('.tracking-link');
-    const adminLinks = await page.$$('.tracking-link');
+
+    let adminFound = false;
+    let adminLinks = await page.$$('.tracking-link');
     for (const link of adminLinks) {
       const text = await page.evaluate((el) => el.textContent.trim(), link);
       if (text.includes('DLV-DEMO-0005')) {
         await link.click();
+        adminFound = true;
         break;
       }
+    }
+    if (!adminFound) {
+      const buttons = await page.$$('nav.pagination button');
+      for (const btn of buttons) {
+        const text = await page.evaluate((el) => el.textContent.trim(), btn);
+        if (text === 'Next') {
+          await btn.click();
+          await sleep(1000);
+          break;
+        }
+      }
+      adminLinks = await page.$$('.tracking-link');
+      for (const link of adminLinks) {
+        const text = await page.evaluate((el) => el.textContent.trim(), link);
+        if (text.includes('DLV-DEMO-0005')) {
+          await link.click();
+          adminFound = true;
+          break;
+        }
+      }
+    }
+    if (!adminFound && targetPkgId) {
+      await page.goto(`http://localhost:4200/admin/deliveries/${targetPkgId}`, { waitUntil: 'networkidle0' });
     }
     await page.waitForSelector('.admin-audit-card');
     await sleep(1000);
@@ -218,6 +249,7 @@ async function runBrowserDemo() {
     process.exit(1);
   } finally {
     await browser.close();
+    process.exit(0);
   }
 }
 

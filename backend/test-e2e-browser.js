@@ -2,7 +2,8 @@ const puppeteer = require('puppeteer');
 const path = require('path');
 const fs = require('fs');
 
-const ARTIFACT_DIR = 'C:\\Users\\olive\\.gemini\\antigravity-ide\\brain\\16c8d526-521a-4d25-be76-0a52ffa53ca3';
+const ARTIFACT_DIR = process.env.ARTIFACT_DIR || 'C:\\Users\\olive\\.gemini\\antigravity-ide\\brain\\4608294d-57d8-427f-b9c9-e02c858f9c89';
+if (!fs.existsSync(ARTIFACT_DIR)) fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
 async function runE2E() {
   console.log('--- STARTING COMPLETE BROWSER E2E TEST ---');

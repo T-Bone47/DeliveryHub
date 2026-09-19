@@ -859,12 +859,10 @@ export class PackageManagementService {
     agentUserIdValue: unknown,
     purposeInput: unknown,
     otpInput: unknown,
-  ): Promise<{
+  ): Promise<PackageDetailsView & {
     verified: boolean;
     purpose: OtpPurpose;
     message: string;
-    package: PackageView;
-    delivery: DeliveryView;
   }> {
     const packageId = getObjectId(id, "Package ID");
     const agentUserId = getObjectId(agentUserIdValue, "Agent User ID");
@@ -1014,15 +1012,16 @@ export class PackageManagementService {
       }).catch(() => undefined);
     }
 
-    const refetchedPackage = (await repositories.packages.findById(packageDocument._id))!;
-    const refetchedDelivery = (await repositories.deliveries.findById(delivery._id))!;
+    const fullDetails = await this.getById(packageDocument._id, {
+      userId: agentUserId.toHexString(),
+      role: "AGENT",
+    });
 
     return {
+      ...fullDetails,
       verified: true,
       purpose,
       message: `${purpose === "PICKUP" ? "Pickup" : "Delivery"} verified successfully.${purpose === "DELIVERY" ? " Please capture and upload proof of delivery photo." : ""}`,
-      package: toPackageView(refetchedPackage),
-      delivery: toDeliveryView(refetchedDelivery),
     };
   }
 
@@ -1357,7 +1356,7 @@ export class PackageManagementService {
     id: unknown,
     agentUserIdValue: unknown,
     statusInput: unknown,
-  ): Promise<{ package: PackageView; delivery: DeliveryView }> {
+  ): Promise<PackageDetailsView> {
     const packageId = getObjectId(id, "Package ID");
     const agentUserId = getObjectId(agentUserIdValue, "Agent User ID");
     const nextStatus = getEnumValue(statusInput, "Delivery Status", DELIVERY_STATUSES);
@@ -1527,13 +1526,10 @@ export class PackageManagementService {
       }).catch(() => undefined);
     }
 
-    const refetchedPackage = (await repositories.packages.findById(packageDocument._id))!;
-    const refetchedDelivery = (await repositories.deliveries.findById(delivery._id))!;
-
-    return {
-      package: toPackageView(refetchedPackage),
-      delivery: toDeliveryView(refetchedDelivery),
-    };
+    return this.getById(packageDocument._id, {
+      userId: agentUserId.toHexString(),
+      role: "AGENT",
+    });
   }
 
   private async listWithQuery(

@@ -443,6 +443,18 @@ export async function runDemoSeed(): Promise<void> {
   const deliveriesCollection = db.collection("deliveries");
   const historiesCollection = db.collection("deliveryHistory");
 
+  // Clean up transient test packages created during test runs so demo packages remain primary
+  const testPkgs = await packagesCollection
+    .find({ trackingNumber: { $regex: /^DLV-\d{4}-/ } })
+    .toArray();
+  const testPkgIds = testPkgs.map((p) => p._id);
+  if (testPkgIds.length > 0) {
+    await bookingsCollection.deleteMany({ packageId: { $in: testPkgIds } });
+    await deliveriesCollection.deleteMany({ packageId: { $in: testPkgIds } });
+    await historiesCollection.deleteMany({ packageId: { $in: testPkgIds } });
+    await packagesCollection.deleteMany({ _id: { $in: testPkgIds } });
+  }
+
   const customersList = Array.from(customerMap.values());
   const standardSrv = serviceMap.get("STANDARD");
   const expressSrv = serviceMap.get("EXPRESS");
@@ -854,14 +866,14 @@ export async function runDemoSeed(): Promise<void> {
     let currentPkgId: ObjectId;
     let pkgCreatedAt: Date;
 
+    pkgCreatedAt = new Date(now.getTime() - (24 - idx) * 3600000);
+    packageDocData.createdAt = pkgCreatedAt;
+
     if (isNew) {
-      pkgCreatedAt = new Date(now.getTime() - (24 - idx) * 3600000);
-      packageDocData.createdAt = pkgCreatedAt;
       const res = await packagesCollection.insertOne(packageDocData);
       currentPkgId = res.insertedId;
     } else {
       currentPkgId = pkg!._id;
-      pkgCreatedAt = pkg!.createdAt ?? now;
       await packagesCollection.updateOne({ _id: currentPkgId }, { $set: packageDocData });
     }
 

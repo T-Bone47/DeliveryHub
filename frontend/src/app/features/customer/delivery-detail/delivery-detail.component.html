@@ -806,7 +806,7 @@
             @if (d.delivery?.actualDeliveryTime) { <dt>Delivered At</dt><dd>{{ d.delivery?.actualDeliveryTime | date: 'medium' }}</dd> }
           </dl>
         } @else {
-          <p class="muted-note">{{ d.assignment.reason || 'No agent is currently assigned to this delivery.' }}</p>
+          <p class="muted-note">{{ d.assignment?.reason || 'No agent is currently assigned to this delivery.' }}</p>
         }
       </div>
 
@@ -828,11 +828,11 @@
     <!-- 4. Delivery Milestone History -->
     <div class="card timeline-card">
       <h3 class="card-title">Delivery Milestones &amp; Audit Trail</h3>
-      @if (d.history.length === 0) {
+      @if (!d.history || d.history.length === 0) {
         <p class="muted-note">No status history recorded yet.</p>
       } @else {
         <ul class="timeline">
-          @for (event of d.history; track event.id) {
+          @for (event of (d.history || []); track event.id) {
             <li>
               <div class="timeline-dot"></div>
               <div class="timeline-body">

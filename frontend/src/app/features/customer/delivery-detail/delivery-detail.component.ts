@@ -283,13 +283,28 @@ export class DeliveryDetailComponent implements OnInit, OnDestroy {
       .pipe(finalize(() => this.actionLoading.set(false)))
       .subscribe({
         next: (res) => {
-          this.details.set(res.data);
+          const current = this.details();
+          if (current) {
+            this.details.set({
+              ...current,
+              ...res.data,
+              package: res.data.package || current.package,
+              delivery: res.data.delivery || current.delivery,
+              history: res.data.history || current.history,
+              assignedAgent: res.data.assignedAgent || current.assignedAgent,
+              booking: res.data.booking || current.booking,
+              assignment: res.data.assignment || current.assignment,
+            });
+          } else {
+            this.details.set(res.data);
+          }
           this.agentOtpInput.set('');
           this.actionSuccess.set(
             purpose === 'PICKUP'
               ? '✓ Pickup verified successfully! Status transitioned to Picked Up.'
               : '✓ Customer Delivery OTP verified! Please capture and upload Proof of Delivery photo to complete handover.',
           );
+          this.reloadQuietly();
         },
         error: (err) => {
           const msg = err.error?.message || 'OTP verification failed. Please verify code with customer.';
@@ -344,9 +359,15 @@ export class DeliveryDetailComponent implements OnInit, OnDestroy {
       .pipe(finalize(() => this.podUploading.set(false)))
       .subscribe({
         next: (res) => {
-          this.details.set(res.data);
+          const current = this.details();
+          if (current) {
+            this.details.set({ ...current, ...res.data });
+          } else {
+            this.details.set(res.data);
+          }
           this.podPreviewUrl.set(null);
           this.actionSuccess.set('✓ Proof of Delivery photo uploaded and recorded! Click "Complete Delivery" to finalize.');
+          this.reloadQuietly();
         },
         error: (err) => {
           const msg = err.error?.message || 'Failed to upload proof of delivery photo.';
@@ -393,9 +414,15 @@ export class DeliveryDetailComponent implements OnInit, OnDestroy {
       .pipe(finalize(() => this.exceptionLoading.set(false)))
       .subscribe({
         next: (res) => {
-          this.details.set(res.data);
+          const current = this.details();
+          if (current) {
+            this.details.set({ ...current, ...res.data });
+          } else {
+            this.details.set(res.data);
+          }
           this.showExceptionModal.set(false);
           this.actionSuccess.set('✓ Delivery exception logged. Delivery marked as FAILED and customer notified.');
+          this.reloadQuietly();
         },
         error: (err) => {
           const msg = err.error?.message || 'Failed to record delivery exception.';
@@ -427,8 +454,14 @@ export class DeliveryDetailComponent implements OnInit, OnDestroy {
       .pipe(finalize(() => this.rescheduleLoading.set(false)))
       .subscribe({
         next: (res) => {
-          this.details.set(res.data);
+          const current = this.details();
+          if (current) {
+            this.details.set({ ...current, ...res.data });
+          } else {
+            this.details.set(res.data);
+          }
           this.actionSuccess.set('✓ Delivery successfully rescheduled! Automated courier reassignment has been initiated.');
+          this.reloadQuietly();
         },
         error: (err) => {
           const msg = err.error?.message || 'Failed to reschedule delivery.';
@@ -451,8 +484,23 @@ export class DeliveryDetailComponent implements OnInit, OnDestroy {
       .pipe(finalize(() => this.actionLoading.set(false)))
       .subscribe({
         next: (res) => {
-          this.details.set(res.data);
+          const current = this.details();
+          if (current) {
+            this.details.set({
+              ...current,
+              ...res.data,
+              package: res.data.package || current.package,
+              delivery: res.data.delivery || current.delivery,
+              history: res.data.history || current.history,
+              assignedAgent: res.data.assignedAgent || current.assignedAgent,
+              booking: res.data.booking || current.booking,
+              assignment: res.data.assignment || current.assignment,
+            });
+          } else {
+            this.details.set(res.data);
+          }
           this.actionSuccess.set(`✓ Delivery tracking status updated to ${status.replace(/_/g, ' ')}.`);
+          this.reloadQuietly();
         },
         error: (err) => {
           const msg = err.error?.message || 'Failed to update delivery status.';
