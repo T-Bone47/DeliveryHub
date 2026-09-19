@@ -83,14 +83,14 @@ import { IconComponent } from '../../../shared/components/icon.component';
 
     .auth-container {
       width: 100%;
-      max-width: 1040px;
-      min-height: 620px;
+      max-width: 980px;
+      min-height: 560px;
       background: var(--color-surface);
       border: 1px solid var(--color-border);
       border-radius: var(--radius-lg);
       box-shadow: 0 20px 40px -8px rgba(15, 23, 42, 0.08);
       display: grid;
-      grid-template-columns: 1.12fr 1fr;
+      grid-template-columns: 1fr 1fr;
       overflow: hidden;
     }
 
@@ -99,7 +99,7 @@ import { IconComponent } from '../../../shared/components/icon.component';
       background-image: radial-gradient(at 100% 0%, rgba(30, 41, 59, 0.8) 0px, transparent 50%),
                         radial-gradient(at 0% 100%, rgba(15, 23, 42, 1) 0px, transparent 50%);
       color: #ffffff;
-      padding: var(--space-10) var(--space-9);
+      padding: 44px 40px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -224,7 +224,7 @@ import { IconComponent } from '../../../shared/components/icon.component';
     }
 
     .auth-card-panel {
-      padding: var(--space-10) var(--space-8);
+      padding: 44px 40px;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -242,7 +242,7 @@ import { IconComponent } from '../../../shared/components/icon.component';
 
     .auth-card-inner {
       width: 100%;
-      max-width: 400px;
+      max-width: 380px;
       margin: 0 auto;
     }
 
