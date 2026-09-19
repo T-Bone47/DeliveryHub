@@ -1,0 +1,133 @@
+<div class="page-header">
+  <div>
+    <div class="header-pretitle">
+      <span class="role-pill">NEW SHIPMENT ORDER</span>
+    </div>
+    <h1>Book Express Delivery</h1>
+    <p class="subtitle">Enter package specifications, select service level, and set pickup/drop-off destinations.</p>
+  </div>
+</div>
+
+@if (loadingServices()) {
+  <dh-loading-spinner label="Connecting to service catalog…"></dh-loading-spinner>
+} @else if (servicesError()) {
+  <div class="card"><p class="error-text">{{ servicesError() }}</p></div>
+} @else {
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate class="card form-card">
+    @if (errorMessage()) {
+      <div class="alert alert-error" role="alert">
+        <dh-icon name="alert"></dh-icon>
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    <!-- 1. Package Specifications -->
+    <div class="form-section-head">
+      <div class="section-icon-box">
+        <dh-icon name="package"></dh-icon>
+      </div>
+      <div>
+        <h3 class="form-section-title">1. Package Specifications</h3>
+        <p class="section-sub">Physical properties and classification</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 form-row">
+      <div class="field">
+        <label for="packageType">Package Type</label>
+        <select id="packageType" formControlName="packageType" class="form-input">
+          @for (type of packageTypes; track type) {
+            <option [value]="type">{{ type }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label for="weight">Weight (kg)</label>
+        <input id="weight" type="number" step="0.1" min="0.01" formControlName="weight" class="form-input" />
+      </div>
+    </div>
+    <div class="field form-row">
+      <label for="description">Content Description</label>
+      <textarea id="description" formControlName="description" rows="2" class="form-input" placeholder="e.g. Sensitive electronics, urgent legal documents, fragile goods"></textarea>
+    </div>
+
+    <!-- 2. Service Level & Scheduling -->
+    <div class="form-section-head">
+      <div class="section-icon-box">
+        <dh-icon name="truck"></dh-icon>
+      </div>
+      <div>
+        <h3 class="form-section-title">2. Service Level &amp; Dispatch Schedule</h3>
+        <p class="section-sub">Choose priority and pickup time</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 form-row">
+      <div class="field">
+        <label for="serviceId">Courier Service Tier</label>
+        <select id="serviceId" formControlName="serviceId" class="form-input">
+          <option value="" disabled>Select service tier</option>
+          @for (service of services(); track service.id) {
+            <option [value]="service.id">{{ service.name }} — {{ service.basePrice | currency }}</option>
+          }
+        </select>
+        @if (services().length === 0) {
+          <span class="hint">No active dispatch tiers currently available.</span>
+        }
+      </div>
+      <div class="field">
+        <label for="scheduledDate">Scheduled Pickup Time</label>
+        <input id="scheduledDate" type="datetime-local" formControlName="scheduledDate" class="form-input" />
+      </div>
+    </div>
+
+    <!-- 3. Pickup Origin -->
+    <div class="form-section-head">
+      <div class="section-icon-box origin-icon">
+        <dh-icon name="map-pin"></dh-icon>
+      </div>
+      <div>
+        <h3 class="form-section-title">3. Pickup Location (Origin)</h3>
+        <p class="section-sub">Where the courier will collect the shipment</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 form-row">
+      <div class="field"><label for="sourceAddress">Street / Building Address</label><input id="sourceAddress" type="text" formControlName="sourceAddress" placeholder="e.g. Ashok Nagar, Road No. 5" class="form-input" /></div>
+      <div class="field"><label for="sourceCity">City</label><input id="sourceCity" type="text" formControlName="sourceCity" placeholder="e.g. Hyderabad" class="form-input" /></div>
+      <div class="field"><label for="sourceState">State</label><input id="sourceState" type="text" formControlName="sourceState" placeholder="e.g. Telangana" class="form-input" /></div>
+      <div class="field"><label for="sourcePostalCode">Postal Code</label><input id="sourcePostalCode" type="text" formControlName="sourcePostalCode" placeholder="e.g. 500020" class="form-input font-mono" /></div>
+    </div>
+
+    <!-- 4. Delivery Destination -->
+    <div class="form-section-head">
+      <div class="section-icon-box dest-icon">
+        <dh-icon name="route"></dh-icon>
+      </div>
+      <div>
+        <h3 class="form-section-title">4. Delivery Destination</h3>
+        <p class="section-sub">Where the courier will hand off to the recipient</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 form-row">
+      <div class="field"><label for="destinationAddress">Street / Building Address</label><input id="destinationAddress" type="text" formControlName="destinationAddress" placeholder="e.g. Krishnapuram Road" class="form-input" /></div>
+      <div class="field"><label for="destinationCity">City</label><input id="destinationCity" type="text" formControlName="destinationCity" placeholder="e.g. Vijayawada" class="form-input" /></div>
+      <div class="field"><label for="destinationState">State</label><input id="destinationState" type="text" formControlName="destinationState" placeholder="e.g. Andhra Pradesh" class="form-input" /></div>
+      <div class="field"><label for="destinationPostalCode">Postal Code</label><input id="destinationPostalCode" type="text" formControlName="destinationPostalCode" placeholder="e.g. 520001" class="form-input font-mono" /></div>
+    </div>
+
+    <div class="form-actions">
+      <a routerLink="/customer/dashboard" class="btn btn-ghost">Cancel</a>
+      <button type="submit" class="btn btn-primary btn-lg" [disabled]="submitting()">
+        @if (submitting()) {
+          <span class="btn-spinner"></span>
+          <span>Dispatching Shipment…</span>
+        } @else {
+          <dh-icon name="check"></dh-icon>
+          <span>Confirm &amp; Create Shipment</span>
+        }
+      </button>
+    </div>
+  </form>
+}

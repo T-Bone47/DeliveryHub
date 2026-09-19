@@ -1,0 +1,51 @@
+<div class="page-header">
+  <div>
+    <h1>Services</h1>
+    <p class="subtitle">Delivery service tiers offered to customers.</p>
+  </div>
+  <button type="button" class="btn btn-primary" (click)="showForm.set(!showForm())">
+    {{ showForm() ? 'Cancel' : '+ Add Service' }}
+  </button>
+</div>
+
+@if (showForm()) {
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate class="card form-card">
+    @if (formError()) { <div class="alert alert-error">{{ formError() }}</div> }
+    <div class="grid grid-cols-2">
+      <div class="field"><label for="serviceCode">Service code</label><input id="serviceCode" type="text" formControlName="serviceCode" /></div>
+      <div class="field"><label for="name">Name</label><input id="name" type="text" formControlName="name" /></div>
+    </div>
+    <div class="field"><label for="description">Description</label><textarea id="description" formControlName="description" rows="2"></textarea></div>
+    <div class="field"><label for="basePrice">Base price</label><input id="basePrice" type="number" step="0.01" min="0" formControlName="basePrice" /></div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Create Service' }}</button>
+    </div>
+  </form>
+}
+
+@if (loading()) {
+  <dh-loading-spinner label="Loading services…"></dh-loading-spinner>
+} @else if (error()) {
+  <dh-error-state [message]="error()!" (retry)="load()"></dh-error-state>
+} @else if (services().length === 0) {
+  <dh-empty-state title="No services yet" description="Add your first delivery service tier."></dh-empty-state>
+} @else {
+  <div class="table-scroll">
+    <table class="dh-table">
+      <thead><tr><th>Code</th><th>Name</th><th>Base price</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        @for (service of services(); track service.id) {
+          <tr>
+            <td>{{ service.serviceCode }}</td>
+            <td>{{ service.name }}</td>
+            <td>{{ service.basePrice | currency }}</td>
+            <td><dh-status-badge [status]="service.isActive ? 'ACTIVE' : 'INACTIVE'"></dh-status-badge></td>
+            <td><button type="button" class="btn btn-ghost btn-sm" (click)="toggleActive(service)">
+              {{ service.isActive ? 'Deactivate' : 'Activate' }}
+            </button></td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

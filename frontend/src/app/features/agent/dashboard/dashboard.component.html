@@ -1,0 +1,188 @@
+<div class="page-header">
+  <div>
+    <div class="header-pretitle">
+      <span class="role-pill">COURIER DISPATCH OPERATIONS</span>
+    </div>
+    <h1>{{ greetingTime() }}, {{ auth.currentUser()?.fullName }}</h1>
+    <p class="subtitle">Real-time assigned parcel manifests and delivery routing.</p>
+  </div>
+</div>
+
+<!-- Shift Metrics Bar -->
+<div class="shift-stats-bar">
+  <div class="stat-pill">
+    <span class="stat-num">{{ totalAssigned() }}</span>
+    <span class="stat-desc">Total Today</span>
+  </div>
+  <div class="stat-pill success">
+    <span class="stat-num">{{ completedCount() }}</span>
+    <span class="stat-desc">Completed</span>
+  </div>
+  <div class="stat-pill active">
+    <span class="stat-num">{{ activeCount() }}</span>
+    <span class="stat-desc">Active Transit</span>
+  </div>
+  <div class="stat-pill neutral">
+    <span class="stat-num">{{ pendingCount() }}</span>
+    <span class="stat-desc">Pending</span>
+  </div>
+</div>
+
+<!-- Active Delivery Spotlight (Courier Priority Task) -->
+@if (activeDelivery(); as active) {
+  <div class="card active-agent-spotlight">
+    <div class="spotlight-header">
+      <div class="spotlight-tag">
+        <span class="pulse-dot" aria-hidden="true"></span>
+        <span>CURRENT PRIORITY TASK</span>
+      </div>
+      <dh-status-badge [status]="active.status"></dh-status-badge>
+    </div>
+
+    <div class="spotlight-body">
+      <div class="spotlight-main-info">
+        <div class="tracking-id-row">
+          <span class="tracking-code font-mono">{{ active.trackingNumber }}</span>
+          <span class="pkg-type-badge">{{ active.packageType }} ({{ active.weight }} kg)</span>
+        </div>
+
+        <div class="route-display">
+          <div class="city-col">
+            <span class="city-label">Pickup From</span>
+            <span class="city-val">{{ active.sourceLocation.city }}</span>
+          </div>
+          <div class="route-arrow-box" aria-hidden="true">
+            <span class="route-line"></span>
+            <dh-icon name="arrow-right"></dh-icon>
+          </div>
+          <div class="city-col">
+            <span class="city-label">Deliver To</span>
+            <span class="city-val">{{ active.destinationLocation.city }}</span>
+          </div>
+        </div>
+
+        <div class="destination-address">
+          <dh-icon name="map-pin"></dh-icon>
+          <span>{{ active.destinationLocation.address }}, {{ active.destinationLocation.city }}</span>
+        </div>
+      </div>
+
+      <div class="spotlight-action-column">
+        <a [routerLink]="['/agent/deliveries', active.id]" class="btn btn-primary btn-lg agent-action-btn">
+          <span>Open Delivery Console</span>
+          <dh-icon name="arrow-right"></dh-icon>
+        </a>
+        <span class="action-hint">Verify OTP &bull; Capture POD &bull; Update Checkpoint</span>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Quick Lookup Bar -->
+<div class="card lookup-card">
+  <div class="lookup-header">
+    <dh-icon name="search"></dh-icon>
+    <h3>Direct Package Lookup</h3>
+  </div>
+  <p class="muted">Access an assigned parcel manifest directly by tracking number or package ID.</p>
+  <div class="lookup-row">
+    <input
+      type="text"
+      placeholder="e.g. DLV-1024 or Package ID"
+      [value]="trackingId()"
+      (input)="trackingId.set($any($event.target).value)"
+      (keyup.enter)="openDelivery()"
+      class="font-mono"
+    />
+    <button type="button" class="btn btn-primary" (click)="openDelivery()" [disabled]="!trackingId().trim()">
+      Open Manifest
+    </button>
+  </div>
+</div>
+
+<!-- Assigned Deliveries Manifest -->
+@if (loading()) {
+  <dh-loading-spinner label="Loading assigned deliveries…"></dh-loading-spinner>
+} @else if (error()) {
+  <dh-error-state [message]="error()!" (retry)="load()"></dh-error-state>
+} @else if (packages().length === 0) {
+  <dh-empty-state title="No assigned deliveries" description="New deliveries assigned to you will appear here automatically."></dh-empty-state>
+} @else {
+  <div class="card queue-section">
+    <div class="queue-header">
+      <div>
+        <h2>Today's Assigned Manifest ({{ packages().length }})</h2>
+        <p class="section-sub">Deliveries ordered by operational schedule</p>
+      </div>
+      <button type="button" class="btn btn-secondary btn-sm" (click)="load()">
+        <dh-icon name="refresh"></dh-icon>
+        <span>Refresh Queue</span>
+      </button>
+    </div>
+
+    <!-- Desktop Table View -->
+    <div class="table-scroll desktop-only">
+      <table class="dh-table">
+        <thead>
+          <tr>
+            <th>Tracking #</th>
+            <th>Pickup</th>
+            <th>Destination</th>
+            <th>Type</th>
+            <th>Scheduled</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (pkg of packages(); track pkg.id) {
+            <tr>
+              <td>
+                <a [routerLink]="['/agent/deliveries', pkg.id]" class="tracking-link font-mono">
+                  {{ pkg.trackingNumber }}
+                </a>
+              </td>
+              <td>{{ pkg.sourceLocation.city }}</td>
+              <td>{{ pkg.destinationLocation.city }}</td>
+              <td>{{ pkg.packageType }}</td>
+              <td>{{ pkg.scheduledDate | date: 'MMM d, h:mm a' }}</td>
+              <td><dh-status-badge [status]="pkg.status"></dh-status-badge></td>
+              <td>
+                <a [routerLink]="['/agent/deliveries', pkg.id]" class="btn btn-secondary btn-sm">
+                  Execute &rarr;
+                </a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Mobile Operational Cards (<768px) -->
+    <div class="mobile-only mobile-agent-cards">
+      @for (pkg of packages(); track pkg.id) {
+        <div class="agent-queue-card">
+          <div class="q-card-top">
+            <span class="tracking-code font-mono">{{ pkg.trackingNumber }}</span>
+            <dh-status-badge [status]="pkg.status"></dh-status-badge>
+          </div>
+
+          <div class="q-route">
+            <span class="q-city">{{ pkg.sourceLocation.city }}</span>
+            <span class="q-arrow">&rarr;</span>
+            <span class="q-city highlight">{{ pkg.destinationLocation.city }}</span>
+          </div>
+
+          <div class="q-meta">
+            <span>{{ pkg.packageType }} &bull; {{ pkg.weight }} kg</span>
+            <span>{{ pkg.scheduledDate | date: 'h:mm a' }}</span>
+          </div>
+
+          <a [routerLink]="['/agent/deliveries', pkg.id]" class="btn btn-primary btn-sm mobile-action-btn">
+            Open Task Console &rarr;
+          </a>
+        </div>
+      }
+    </div>
+  </div>
+}

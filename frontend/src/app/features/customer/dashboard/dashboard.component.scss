@@ -1,0 +1,535 @@
+// Swiggy/Zomato Hyperlocal Delivery Dashboard Styles
+.dash-hero-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: var(--space-6);
+  gap: var(--space-4);
+  flex-wrap: wrap;
+
+  .greeting-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px;
+    background: #fff3eb;
+    color: var(--color-primary);
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: var(--radius-full);
+    border: 1px solid rgba(255, 82, 0, 0.2);
+    margin-bottom: var(--space-2);
+  }
+
+  .hero-title {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--color-text);
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+
+  .hero-subtitle {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    margin-top: 4px;
+  }
+
+  .book-delivery-btn {
+    box-shadow: var(--shadow-primary);
+  }
+}
+
+.pulse-beacon {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(255, 82, 0, 0.3);
+  animation: beacon 1.8s infinite;
+}
+
+@keyframes beacon {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.2); }
+}
+
+// 1. Live Order Tracker Hero Card (Refined Swiss/Logistics SaaS style)
+.swiggy-tracker-card {
+  margin-bottom: var(--space-6);
+  padding: var(--space-6) var(--space-8);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--color-primary);
+  }
+}
+
+.tracker-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid #f1f3f6;
+
+  .live-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #ecfdf5;
+    color: #065f46;
+    padding: 5px 12px;
+    border-radius: var(--radius-full);
+    border: 1px solid #a7f3d0;
+    font-size: 11.5px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+  }
+
+  .live-pulse {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
+    animation: beacon 1.5s infinite;
+  }
+
+  .eta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #fff7ed;
+    color: #c2410c;
+    border: 1px solid #fed7aa;
+    padding: 5px 12px;
+    border-radius: var(--radius-full);
+    font-size: 12px;
+    font-weight: 800;
+
+    dh-icon { color: #ea580c; width: 14px; height: 14px; }
+  }
+}
+
+.route-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-6);
+  background: #ffffff;
+  padding: var(--space-5) var(--space-6);
+  border-radius: var(--radius-lg);
+  border: 1px solid #edf1f7;
+  box-shadow: var(--shadow-sm);
+
+  .city-node {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+
+    .node-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &.origin-pin { background: #fff3eb; color: #ff5200; }
+      &.dest-pin { background: #eff6ff; color: #2563eb; }
+    }
+
+    .node-city {
+      display: block;
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--color-text);
+      letter-spacing: -0.01em;
+    }
+
+    .node-sub {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--color-muted);
+    }
+  }
+
+  .scooter-track {
+    flex: 1;
+    position: relative;
+    margin: 0 var(--space-8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .track-line {
+      width: 100%;
+      height: 3px;
+      background: repeating-linear-gradient(90deg, #ff5200 0, #ff5200 8px, transparent 8px, transparent 14px);
+      opacity: 0.4;
+    }
+
+    .scooter-avatar {
+      position: absolute;
+      width: 38px;
+      height: 38px;
+      background: var(--color-primary-gradient);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(255, 82, 0, 0.4);
+      animation: bounce-scooter 2s infinite ease-in-out;
+    }
+  }
+}
+
+@keyframes bounce-scooter {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px) scale(1.05); }
+}
+
+.partner-meta-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+
+  .partner-cell {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .partner-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 18px;
+    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.25);
+  }
+
+  .partner-name-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .partner-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  .verified-partner-tag {
+    font-size: 11px;
+    font-weight: 700;
+    color: #059669;
+    background: #ecfdf5;
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+  }
+
+  .partner-details {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--color-text-secondary);
+    margin-top: 2px;
+  }
+
+  .rating-badge {
+    color: #b45309;
+    font-weight: 800;
+    background: #fef3c7;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 11.5px;
+  }
+
+  .bullet { color: var(--color-muted); }
+  .tracking-chip { font-weight: 700; color: var(--color-primary); }
+
+  .track-order-cta {
+    box-shadow: var(--shadow-primary);
+  }
+}
+
+.swiggy-all-clear-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  margin-bottom: var(--space-6);
+  border-left: 4px solid #10b981;
+
+  .clear-illustration {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #ecfdf5;
+    color: #059669;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .clear-text {
+    flex: 1;
+    h3 { font-size: 16px; font-weight: 700; margin: 0; }
+    p { font-size: 13px; color: var(--color-text-secondary); margin-top: 2px; }
+  }
+}
+
+// 2. Hyperlocal Quick Service Tiles (Swiggy Genie / Instamart style)
+.quick-tiles-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-5);
+  margin-bottom: var(--space-6);
+
+  .quick-tile {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-5);
+    text-decoration: none;
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.15s ease;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--color-border-strong);
+
+      .tile-arrow {
+        transform: translateX(3px);
+        color: var(--color-primary);
+      }
+    }
+
+    .tile-icon-box {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+
+      &.orange { background: var(--color-primary-soft, #fff7ed); color: var(--color-primary, #ea580c); }
+      &.blue { background: var(--color-info-soft, #eff6ff); color: var(--color-info, #2563eb); }
+      &.green { background: var(--color-success-soft, #ecfdf5); color: var(--color-success, #16a34a); }
+    }
+
+    .tile-info {
+      flex: 1;
+
+      .tile-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--color-text);
+        margin: 0;
+      }
+
+      .tile-desc {
+        font-size: 12px;
+        color: var(--color-text-secondary);
+        margin-top: 2px;
+        line-height: 1.35;
+      }
+    }
+
+    .tile-arrow {
+      font-size: 16px;
+      color: var(--color-muted);
+      transition: transform 0.15s ease;
+    }
+  }
+}
+
+// 3. Metrics Strip
+.metrics-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-5);
+  margin-bottom: var(--space-6);
+}
+
+// 4. Recent Deliveries Feed (Order Card Style)
+.recent-section-card {
+  padding: 0;
+  overflow: hidden;
+
+  .section-top-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-5) var(--space-6);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .recent-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--color-text);
+    margin: 0;
+  }
+
+  .recent-sub {
+    font-size: 12.5px;
+    color: var(--color-text-secondary);
+    margin-top: 2px;
+  }
+}
+
+.order-cards-list {
+  display: flex;
+  flex-direction: column;
+
+  .order-item-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-6);
+    border-bottom: 1px solid var(--color-border);
+    transition: background-color 0.15s ease;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &:hover {
+      background-color: #fbfcfe;
+    }
+  }
+
+  .order-icon-badge {
+    width: 42px;
+    height: 42px;
+    border-radius: var(--radius-md);
+    background: #f3f4f6;
+    color: var(--color-text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .order-main-info {
+    flex: 1;
+    min-width: 0;
+
+    .order-header-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13.5px;
+
+      .tracking-code {
+        color: var(--color-text);
+        font-weight: 700;
+      }
+
+      .bullet { color: var(--color-muted); }
+      .pkg-type { font-weight: 600; color: var(--color-text-secondary); font-size: 12.5px; }
+    }
+
+    .order-route-line {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12.5px;
+      color: var(--color-text-secondary);
+      margin-top: 2px;
+
+      .route-arrow { color: var(--color-muted); font-size: 13px; }
+      .route-point.bold { font-weight: 700; color: var(--color-text); }
+      .order-date { color: var(--color-muted); font-size: 12px; }
+    }
+  }
+
+  .order-status-box {
+    flex-shrink: 0;
+  }
+
+  .order-action-box {
+    flex-shrink: 0;
+  }
+}
+
+// Responsive
+@media (max-width: 900px) {
+  .quick-tiles-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .metrics-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .route-hero {
+    flex-direction: column;
+    gap: var(--space-4);
+
+    .scooter-track {
+      width: 100%;
+      margin: var(--space-2) 0;
+    }
+  }
+
+  .partner-meta-box {
+    flex-direction: column;
+    align-items: stretch;
+
+    .action-dock .btn {
+      width: 100%;
+    }
+  }
+
+  .order-item-row {
+    flex-wrap: wrap;
+    gap: var(--space-3);
+
+    .order-main-info {
+      width: 100%;
+    }
+
+    .order-status-box {
+      margin-left: 54px;
+    }
+
+    .order-action-box {
+      margin-left: auto;
+    }
+  }
+}

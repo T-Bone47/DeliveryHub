@@ -1,0 +1,142 @@
+<div class="page-header">
+  <div>
+    <div class="header-pretitle">
+      <span class="role-pill">ENTERPRISE SHIPMENT MANIFEST</span>
+    </div>
+    <h1>Global Packages Manifest</h1>
+    <p class="subtitle">Complete register of delivery orders across all customers and dispatch corridors.</p>
+  </div>
+  <div class="header-actions">
+    <button type="button" class="btn btn-secondary btn-sm" (click)="load()" [disabled]="loading()">
+      <dh-icon name="refresh"></dh-icon>
+      <span>Refresh</span>
+    </button>
+  </div>
+</div>
+
+<div class="card filter-bar-card">
+  <div class="filter-controls">
+    <div class="filter-field">
+      <label for="statusFilter" class="filter-label">
+        <dh-icon name="filter"></dh-icon>
+        <span>Status Filter</span>
+      </label>
+      <select id="statusFilter" class="select-input" [value]="statusFilter()" (change)="onStatusChange($any($event.target).value)">
+        <option value="">All Statuses ({{ total() }})</option>
+        @for (status of statuses; track status) { <option [value]="status">{{ status }}</option> }
+      </select>
+    </div>
+    @if (statusFilter()) {
+      <button type="button" class="btn btn-ghost btn-sm clear-filter-btn" (click)="onStatusChange('')">
+        <dh-icon name="cross"></dh-icon>
+        <span>Clear Filter</span>
+      </button>
+    }
+  </div>
+  <div class="filter-meta">
+    <span class="total-badge font-mono">{{ total() }} Shipments</span>
+  </div>
+</div>
+
+@if (loading()) {
+  <dh-loading-spinner label="Querying parcel repository…"></dh-loading-spinner>
+} @else if (error()) {
+  <dh-error-state [message]="error()!" (retry)="load()"></dh-error-state>
+} @else if (packages().length === 0) {
+  <dh-empty-state
+    title="No packages match query"
+    description="Try adjusting your status filter or creating a new delivery."
+  ></dh-empty-state>
+} @else {
+  <!-- Desktop Table View -->
+  <div class="card table-card desktop-only">
+    <div class="table-scroll">
+      <table class="dh-table">
+        <thead>
+          <tr>
+            <th>Tracking #</th>
+            <th>Type</th>
+            <th>Scheduled</th>
+            <th>Status</th>
+            <th>Courier Assignment</th>
+            <th class="text-right">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (pkg of packages(); track pkg.id) {
+            <tr>
+              <td>
+                <a [routerLink]="['/admin/packages', pkg.id]" class="tracking-link font-mono">
+                  {{ pkg.trackingNumber }}
+                </a>
+              </td>
+              <td>{{ pkg.packageType }}</td>
+              <td>{{ pkg.scheduledDate | date: 'MMM d, y' }}</td>
+              <td><dh-status-badge [status]="pkg.status"></dh-status-badge></td>
+              <td>
+                @if (pkg.assignedAgentId) {
+                  <span class="badge badge-success">
+                    <dh-icon name="check"></dh-icon>
+                    <span>Assigned</span>
+                  </span>
+                } @else if (pkg.status === 'PENDING') {
+                  <button type="button" class="btn btn-secondary btn-sm" [disabled]="assigningId() === pkg.id" (click)="retryAssignment(pkg)">
+                    <dh-icon name="refresh"></dh-icon>
+                    <span>{{ assigningId() === pkg.id ? 'Assigning…' : 'Retry assign' }}</span>
+                  </button>
+                } @else {
+                  <span class="text-muted">—</span>
+                }
+              </td>
+              <td class="text-right">
+                <a [routerLink]="['/admin/packages', pkg.id]" class="btn btn-secondary btn-sm">
+                  <span>Inspect</span>
+                  <dh-icon name="arrow-right"></dh-icon>
+                </a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="pagination-footer">
+      <dh-pagination [page]="page()" [totalPages]="totalPages()" [total]="total()" (pageChange)="onPageChange($event)"></dh-pagination>
+    </div>
+  </div>
+
+  <!-- Mobile Card View -->
+  <div class="mobile-packages-cards mobile-only">
+    @for (pkg of packages(); track pkg.id) {
+      <div class="card mobile-pkg-card">
+        <div class="card-head">
+          <span class="font-mono tracking-code">{{ pkg.trackingNumber }}</span>
+          <dh-status-badge [status]="pkg.status"></dh-status-badge>
+        </div>
+        <div class="card-meta-grid">
+          <div>
+            <span class="meta-lbl">Type</span>
+            <span class="meta-val">{{ pkg.packageType }}</span>
+          </div>
+          <div>
+            <span class="meta-lbl">Scheduled</span>
+            <span class="meta-val">{{ pkg.scheduledDate | date: 'MMM d, y' }}</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          @if (!pkg.assignedAgentId && pkg.status === 'PENDING') {
+            <button type="button" class="btn btn-secondary btn-sm btn-full" [disabled]="assigningId() === pkg.id" (click)="retryAssignment(pkg)">
+              <dh-icon name="refresh"></dh-icon>
+              <span>{{ assigningId() === pkg.id ? 'Assigning…' : 'Retry Assign' }}</span>
+            </button>
+          }
+          <a [routerLink]="['/admin/packages', pkg.id]" class="btn btn-primary btn-sm btn-full">
+            <span>Inspect Shipment Details &rarr;</span>
+          </a>
+        </div>
+      </div>
+    }
+    <div class="card pagination-card">
+      <dh-pagination [page]="page()" [totalPages]="totalPages()" [total]="total()" (pageChange)="onPageChange($event)"></dh-pagination>
+    </div>
+  </div>
+}

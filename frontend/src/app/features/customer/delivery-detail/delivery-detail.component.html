@@ -1,0 +1,915 @@
+@if (loading()) {
+  <dh-loading-spinner label="Loading delivery details…"></dh-loading-spinner>
+} @else if (error()) {
+  <dh-error-state [message]="error()!" (retry)="load()"></dh-error-state>
+} @else {
+  @if (details(); as d) {
+    <!-- Breadcrumb -->
+    <div class="breadcrumb-bar">
+      <a [routerLink]="backLink()" class="back-link">
+        <span class="arrow">&larr;</span> {{ backLabel() }}
+      </a>
+    </div>
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <div>
+        <div class="header-pretitle">
+          <span class="package-type-pill">{{ d.package.packageType }}</span>
+          <span class="portal-badge">{{ userRole() }} PORTAL</span>
+        </div>
+        <h1>{{ d.package.trackingNumber }}</h1>
+        <p class="subtitle">
+          Created on {{ d.package.createdAt | date: 'MMM d, y, h:mm a' }} &bull;
+          Booking #{{ d.booking?.bookingNumber || 'N/A' }}
+        </p>
+      </div>
+
+      <div class="header-actions">
+        <dh-status-badge [status]="d.package.status"></dh-status-badge>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="load()" [disabled]="actionLoading()">
+          <span>Refresh</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Notification / Alert Banners -->
+    @if (actionSuccess()) {
+      <div class="alert alert-success" role="alert">
+        <span class="alert-icon">&check;</span>
+        <div class="alert-content">{{ actionSuccess() }}</div>
+      </div>
+    }
+    @if (actionError()) {
+      <div class="alert alert-error" role="alert">
+        <span class="alert-icon">&excl;</span>
+        <div class="alert-content">{{ actionError() }}</div>
+      </div>
+    }
+
+    <!-- Delivery Exception Alert & Rescheduling (Feature 2) -->
+    @if (d.package.status === 'FAILED') {
+      <div class="card exception-card">
+        <div class="exception-card-header">
+          <div class="icon-circle exception-icon">
+            <dh-icon name="alert"></dh-icon>
+          </div>
+          <div class="exception-title-block">
+            <div class="exception-status-row">
+              <h3 class="v-title">Delivery Attempt Unsuccessful</h3>
+              <span class="badge-failed">DELIVERY FAILED</span>
+            </div>
+            <p class="v-sub">
+              The courier was unable to complete handover for this parcel. An exception has been recorded.
+            </p>
+          </div>
+        </div>
+
+        <div class="exception-details-box">
+          <div class="exception-data-row">
+            <span class="exception-field-label">Reported Reason:</span>
+            <span class="exception-reason-pill">{{ latestExceptionInfo()?.reason || 'Delivery Exception' }}</span>
+          </div>
+          @if (latestExceptionInfo()?.note) {
+            <div class="exception-data-row">
+              <span class="exception-field-label">Courier Remarks:</span>
+              <span class="exception-note-text">"{{ latestExceptionInfo()?.note }}"</span>
+            </div>
+          }
+          <div class="exception-data-row">
+            <span class="exception-field-label">Attempt Timestamp:</span>
+            <span class="exception-field-val">{{ (latestExceptionInfo()?.reportedAt || d.package.updatedAt) | date: 'MMM d, y, h:mm a' }}</span>
+          </div>
+        </div>
+
+        <!-- Customer & Admin Rescheduling -->
+        @if (userRole() === 'CUSTOMER' || userRole() === 'ADMIN') {
+          <div class="reschedule-action-box">
+            <div class="reschedule-prompt">
+              <h4>Reschedule This Delivery</h4>
+              <p>Select a convenient future delivery date &amp; time. Once rescheduled, status resets to PENDING and an optimal courier agent is reassigned automatically.</p>
+            </div>
+            <div class="reschedule-form-row">
+              <div class="reschedule-input-group">
+                <label for="rescheduleDateTime" class="reschedule-label">Choose New Scheduled Date &amp; Time</label>
+                <input
+                  id="rescheduleDateTime"
+                  type="datetime-local"
+                  [ngModel]="rescheduleDate()"
+                  (ngModelChange)="rescheduleDate.set($event)"
+                  [min]="minRescheduleDate()"
+                  class="reschedule-input"
+                  [disabled]="rescheduleLoading()"
+                />
+              </div>
+              <button
+                type="button"
+                class="btn btn-primary btn-reschedule"
+                (click)="submitReschedule()"
+                [disabled]="!rescheduleDate() || rescheduleLoading()"
+              >
+                {{ rescheduleLoading() ? 'Rescheduling...' : 'Reschedule Delivery' }}
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Live Hyperlocal Tracking Corridor (Swiggy / Zomato style) -->
+    @if (d.package.status === 'OUT_FOR_DELIVERY' || d.package.status === 'IN_TRANSIT' || d.package.status === 'AGENT_ASSIGNED' || d.package.status === 'PICKED_UP') {
+      <div class="card live-corridor-hero">
+        <div class="corridor-top">
+          <div class="live-pill-badge">
+            <span class="pulse-beacon"></span>
+            <span class="live-pill-text">LIVE TRACKING ACTIVE</span>
+          </div>
+          <div class="eta-pill">
+            <dh-icon name="zap"></dh-icon>
+            <span>Estimated Delivery: <strong>~25 Mins</strong> &bull; On-Time Guarantee</span>
+          </div>
+        </div>
+
+        <div class="corridor-track-container">
+          <div class="corridor-node origin-node">
+            <div class="node-icon-dot origin-dot">
+              <dh-icon name="map-pin"></dh-icon>
+            </div>
+            <div class="node-meta">
+              <span class="node-label">Pickup Hub</span>
+              <span class="node-city">{{ d.package.sourceLocation.city }}</span>
+            </div>
+          </div>
+
+          <div class="corridor-path">
+            <div class="corridor-line"></div>
+            <div class="moving-scooter-marker">
+              <div class="scooter-avatar-wrap">
+                <dh-icon name="scooter"></dh-icon>
+              </div>
+              <span class="scooter-tooltip">Courier En Route</span>
+            </div>
+          </div>
+
+          <div class="corridor-node dest-node">
+            <div class="node-icon-dot dest-dot">
+              <dh-icon name="map-pin"></dh-icon>
+            </div>
+            <div class="node-meta">
+              <span class="node-label">Delivery Address</span>
+              <span class="node-city">{{ d.package.destinationLocation.city }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- 1. Visual Delivery Status Progression (Stepper) -->
+    <div class="card stepper-card">
+      <div class="stepper-header">
+        <div>
+          <h3 class="stepper-title">Delivery Journey &amp; Milestones</h3>
+          <span class="stepper-sub">Live real-time state machine tracking</span>
+        </div>
+        <span class="stepper-badge">End-to-End Verified</span>
+      </div>
+
+      <div class="stepper-track">
+        @for (step of trackingSteps; track step.key) {
+          @let statusClass = getStepStatus(step.key);
+          <div class="step-item" [ngClass]="statusClass">
+            <div class="step-indicator">
+              @if (statusClass === 'completed') {
+                <span class="step-dot completed" title="Completed">
+                  <dh-icon name="check"></dh-icon>
+                </span>
+              } @else if (statusClass === 'active') {
+                <span class="step-dot active" title="In Progress">
+                  <span class="step-pulse"></span>
+                  <dh-icon name="scooter"></dh-icon>
+                </span>
+              } @else {
+                <span class="step-dot pending" title="Pending">
+                  <span class="dot-inner"></span>
+                </span>
+              }
+              <div class="step-line"></div>
+            </div>
+            <div class="step-info">
+              <span class="step-label">{{ step.label }}</span>
+              <span class="step-desc">{{ step.description }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- 2. Role-Aware OTP & Operations Console -->
+
+    <!-- CUSTOMER VIEW -->
+    @if (userRole() === 'CUSTOMER') {
+      <div class="card verification-card">
+        <!-- Case A: Eligible for Pickup OTP -->
+        @if (d.package.status === 'AGENT_ASSIGNED') {
+          <div class="verification-header">
+            <div class="icon-circle pickup-icon">
+              <dh-icon name="shield"></dh-icon>
+            </div>
+            <div>
+              <h3 class="v-title">Pickup Verification Code</h3>
+              <p class="v-sub">
+                Your courier agent ({{ d.assignedAgent?.name || 'Assigned Courier' }}) will ask for this code when collecting your package.
+              </p>
+            </div>
+          </div>
+
+          @if (activeOtp() && activeOtp()?.purpose === 'PICKUP') {
+            <div class="otp-box-container">
+              <div class="otp-display" aria-label="Pickup Verification OTP">
+                @for (digit of activeOtp()!.code.split(''); track $index) {
+                  <span class="otp-digit">{{ digit }}</span>
+                }
+              </div>
+
+              <div class="otp-meta">
+                <div class="timer-badge" [class.expired]="otpExpired()">
+                  <span class="timer-label">Expires in:</span>
+                  <span class="timer-val">{{ timeRemaining() }}</span>
+                </div>
+                <p class="otp-security-notice">
+                  &bull; Keep this code private. Do not share over phone or SMS until the courier arrives.
+                </p>
+              </div>
+
+              @if (otpExpired()) {
+                <div class="regenerate-row">
+                  <span class="error-msg">This OTP has expired. Please generate a fresh code.</span>
+                  <button type="button" class="btn btn-secondary btn-sm" (click)="generateOtp('PICKUP')" [disabled]="actionLoading()">
+                    Regenerate OTP
+                  </button>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="otp-action-prompt">
+              <p>Ready for courier pickup? Click below to generate your secure, single-use 6-digit verification code.</p>
+              <button type="button" class="btn btn-primary" (click)="generateOtp('PICKUP')" [disabled]="actionLoading()">
+                {{ actionLoading() ? 'Generating...' : 'Generate Pickup OTP' }}
+              </button>
+            </div>
+          }
+        }
+
+        <!-- Case B: Eligible for Delivery OTP -->
+        @else if (d.package.status === 'OUT_FOR_DELIVERY' || d.package.status === 'IN_TRANSIT') {
+          <div class="verification-header">
+            <div class="icon-circle delivery-icon">
+              <dh-icon name="shield"></dh-icon>
+            </div>
+            <div>
+              <h3 class="v-title">Final Delivery Verification Code</h3>
+              <p class="v-sub">
+                Provide this code to your courier agent only after you have physically received and inspected your package.
+              </p>
+            </div>
+          </div>
+
+          @if (activeOtp() && activeOtp()?.purpose === 'DELIVERY') {
+            <div class="otp-box-container">
+              <div class="otp-display" aria-label="Delivery Verification OTP">
+                @for (digit of activeOtp()!.code.split(''); track $index) {
+                  <span class="otp-digit">{{ digit }}</span>
+                }
+              </div>
+
+              <div class="otp-meta">
+                <div class="timer-badge" [class.expired]="otpExpired()">
+                  <span class="timer-label">Expires in:</span>
+                  <span class="timer-val">{{ timeRemaining() }}</span>
+                </div>
+                <p class="otp-security-notice">
+                  &bull; Never disclose this code before physical delivery completion.
+                </p>
+              </div>
+
+              @if (otpExpired()) {
+                <div class="regenerate-row">
+                  <span class="error-msg">This OTP has expired. Please generate a fresh code.</span>
+                  <button type="button" class="btn btn-secondary btn-sm" (click)="generateOtp('DELIVERY')" [disabled]="actionLoading()">
+                    Regenerate Delivery OTP
+                  </button>
+                </div>
+              }
+            </div>
+          } @else if (d.package.status === 'OUT_FOR_DELIVERY') {
+            <div class="otp-action-prompt">
+              <p>The courier is out for delivery with your parcel. Click below to generate your final delivery verification OTP.</p>
+              <button type="button" class="btn btn-primary" (click)="generateOtp('DELIVERY')" [disabled]="actionLoading()">
+                {{ actionLoading() ? 'Generating...' : 'Generate Delivery OTP' }}
+              </button>
+            </div>
+          } @else {
+            <div class="otp-status-notice">
+              <p class="muted-note">
+                Package is currently in transit between logistic hubs. Final delivery OTP generation will be unlocked once marked Out for Delivery.
+              </p>
+            </div>
+          }
+        }
+
+        <!-- Case C: Already Picked Up -->
+        @else if (d.package.status === 'PICKED_UP') {
+          <div class="banner-success">
+            <span class="banner-icon">&check;</span>
+            <div>
+              <strong>Package Verified &amp; Picked Up</strong>
+              <p>Collected by courier {{ d.assignedAgent?.name }} on {{ d.delivery?.pickupTime | date: 'medium' }}. Awaiting hub dispatch.</p>
+            </div>
+          </div>
+        }
+
+        <!-- Case D: Already Delivered -->
+        @else if (d.package.status === 'DELIVERED') {
+          <div class="banner-success">
+            <span class="banner-icon">&check;</span>
+            <div>
+              <strong>Delivery Completed Successfully</strong>
+              <p>Handover verified on {{ d.delivery?.actualDeliveryTime | date: 'medium' }}. Thank you for shipping with DeliveryHub!</p>
+            </div>
+          </div>
+        }
+
+        <!-- Case E: Still Pending Agent Assignment -->
+        @else if (d.package.status === 'PENDING') {
+          <div class="banner-info">
+            <p>Our dispatch algorithm is assigning an optimal courier agent. Pickup verification OTP will be available once an agent is assigned.</p>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- AGENT VIEW -->
+    @if (userRole() === 'AGENT') {
+      <div class="card courier-console-card">
+        <div class="console-header">
+          <div class="console-header-left">
+            <div class="icon-circle agent-icon">
+              <dh-icon name="truck"></dh-icon>
+            </div>
+            <div>
+              <h3 class="v-title">Courier Action Console</h3>
+              <p class="v-sub">Authorized operations for assigned courier: {{ d.assignedAgent?.name }} ({{ d.assignedAgent?.agentCode }})</p>
+            </div>
+          </div>
+          @if (d.package.status === 'AGENT_ASSIGNED' || d.package.status === 'PICKED_UP' || d.package.status === 'IN_TRANSIT' || d.package.status === 'OUT_FOR_DELIVERY') {
+            <button type="button" class="btn btn-danger-outline btn-sm" (click)="openExceptionModal()">
+              <dh-icon name="alert"></dh-icon>
+              <span>Report Delivery Issue</span>
+            </button>
+          }
+        </div>
+
+        <!-- Agent Action Step 1: Verify Pickup OTP -->
+        @if (d.package.status === 'AGENT_ASSIGNED') {
+          <div class="agent-action-box">
+            <div class="action-desc">
+              <h4>Pickup Verification Required</h4>
+              <p>Meet customer at pickup address. Ask customer to view their Customer Portal and share their 6-digit Pickup Verification Code.</p>
+            </div>
+
+            <div class="agent-otp-form">
+              <label for="pickupOtpInput" class="form-label">Customer 6-Digit Pickup OTP</label>
+              <div class="otp-input-row">
+                <input
+                  id="pickupOtpInput"
+                  type="text"
+                  [ngModel]="agentOtpInput()"
+                  (ngModelChange)="onOtpInputChange($event)"
+                  maxlength="6"
+                  inputmode="numeric"
+                  autocomplete="one-time-code"
+                  placeholder="000000"
+                  class="agent-code-input"
+                />
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  (click)="verifyOtp('PICKUP')"
+                  [disabled]="agentOtpInput().length !== 6 || actionLoading()"
+                >
+                  {{ actionLoading() ? 'Verifying...' : 'Verify Pickup OTP' }}
+                </button>
+              </div>
+              <div class="otp-attempts-hint">
+                <span>Maximum 5 attempts allowed. Attempts remaining: <strong>{{ d.delivery?.pickupOtp?.attemptsRemaining ?? 5 }}</strong></span>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Agent Action Step 2: Start Transit -->
+        @else if (d.package.status === 'PICKED_UP') {
+          <div class="agent-action-box">
+            <div class="action-desc">
+              <h4>&check; Pickup Verified &bull; Ready for Transit</h4>
+              <p>Package custody verified on {{ d.delivery?.pickupTime | date: 'medium' }}. When departing pickup location or moving parcel along the route, mark as In Transit.</p>
+            </div>
+            <div class="action-btn-row">
+              <button
+                type="button"
+                class="btn btn-primary"
+                (click)="updateTrackingStatus('IN_TRANSIT')"
+                [disabled]="actionLoading()"
+              >
+                {{ actionLoading() ? 'Updating...' : 'Start Transit' }}
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- Agent Action Step 3: Out for Delivery -->
+        @else if (d.package.status === 'IN_TRANSIT') {
+          <div class="agent-action-box">
+            <div class="action-desc">
+              <h4>In Transit &bull; Next: Final Mile Delivery</h4>
+              <p>Parcel has reached destination hub/sector. When initiating final delivery handover to recipient address, mark as Out for Delivery.</p>
+            </div>
+            <div class="action-btn-row">
+              <button
+                type="button"
+                class="btn btn-primary"
+                (click)="updateTrackingStatus('OUT_FOR_DELIVERY')"
+                [disabled]="actionLoading()"
+              >
+                {{ actionLoading() ? 'Updating...' : 'Mark Out for Delivery' }}
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- Agent Action Step 4: Out for Delivery (Verify Delivery OTP + POD Upload + Complete) -->
+        @else if (d.package.status === 'OUT_FOR_DELIVERY') {
+          <div class="agent-action-box">
+            @if (!d.delivery?.deliveryOtp?.verified) {
+              <div class="action-desc">
+                <h4>Step 1: Customer Delivery OTP Verification</h4>
+                <p>Arrived at destination address. Present parcel to customer and enter the 6-digit Delivery OTP displayed in their portal.</p>
+              </div>
+
+              <div class="agent-otp-form">
+                <label for="deliveryOtpInput" class="form-label">Customer 6-Digit Delivery OTP</label>
+                <div class="otp-input-row">
+                  <input
+                    id="deliveryOtpInput"
+                    type="text"
+                    [ngModel]="agentOtpInput()"
+                    (ngModelChange)="onOtpInputChange($event)"
+                    maxlength="6"
+                    inputmode="numeric"
+                    autocomplete="one-time-code"
+                    placeholder="000000"
+                    class="agent-code-input"
+                  />
+                  <button
+                    type="button"
+                    class="btn btn-primary"
+                    (click)="verifyOtp('DELIVERY')"
+                    [disabled]="agentOtpInput().length !== 6 || actionLoading()"
+                  >
+                    {{ actionLoading() ? 'Verifying...' : 'Verify Delivery OTP' }}
+                  </button>
+                </div>
+                <div class="otp-attempts-hint">
+                  <span>Maximum 5 attempts allowed. Attempts remaining: <strong>{{ d.delivery?.deliveryOtp?.attemptsRemaining ?? 5 }}</strong></span>
+                </div>
+              </div>
+            } @else {
+              <!-- Delivery OTP is verified! -->
+              <div class="banner-success mb-4">
+                <span class="banner-icon">&check;</span>
+                <div>
+                  <strong>Customer Delivery OTP Verified</strong>
+                  <p>Handover authentication confirmed at {{ d.delivery?.deliveryOtp?.verifiedAt | date: 'medium' }}.</p>
+                </div>
+              </div>
+
+              @if (!d.delivery?.proofOfDelivery?.photoUrl) {
+                <div class="pod-upload-prompt-card">
+                  <div class="pod-upload-header">
+                    <h4>Step 2: Capture Digital Proof of Delivery (POD)</h4>
+                    <p>Take or select a photo of the delivered parcel at the customer location to seal proof of delivery.</p>
+                  </div>
+
+                  <input
+                    type="file"
+                    #podFileInput
+                    accept="image/jpeg,image/png,image/webp"
+                    capture="environment"
+                    style="display: none;"
+                    (change)="onPodFileSelected($event)"
+                  />
+
+                  @if (!podPreviewUrl()) {
+                    <div class="pod-file-dropzone" (click)="podFileInput.click()">
+                      <div class="dropzone-icon">
+                        <dh-icon name="camera"></dh-icon>
+                      </div>
+                      <span class="dropzone-text">Click to Capture or Choose Photo</span>
+                      <span class="dropzone-hint">Supports JPEG, PNG, WebP (Max 5MB)</span>
+                    </div>
+                  } @else {
+                    <div class="pod-preview-card">
+                      <div class="pod-preview-thumb-box">
+                        <img [src]="podPreviewUrl()!" alt="POD Preview" class="pod-preview-img" />
+                      </div>
+                      <div class="pod-preview-btns">
+                        <button
+                          type="button"
+                          class="btn btn-primary"
+                          (click)="uploadPod()"
+                          [disabled]="podUploading()"
+                        >
+                          {{ podUploading() ? 'Uploading Proof...' : 'Upload & Seal Proof' }}
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-secondary btn-sm"
+                          (click)="clearPodSelection()"
+                          [disabled]="podUploading()"
+                        >
+                          Change Photo
+                        </button>
+                      </div>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <!-- Proof of Delivery is uploaded and sealed! -->
+                <div class="banner-success mb-4">
+                  <span class="banner-icon">&check;</span>
+                  <div>
+                    <strong>Proof of Delivery Photo Recorded &amp; Sealed</strong>
+                    <p>Photo captured on {{ d.delivery?.proofOfDelivery?.capturedAt | date: 'medium' }}.</p>
+                  </div>
+                </div>
+
+                <div class="pod-ready-complete-card">
+                  <div class="pod-sealed-preview" (click)="openPhotoModal(d.delivery!.proofOfDelivery!.photoUrl)">
+                    <img [src]="resolvePhotoUrl(d.delivery!.proofOfDelivery!.photoUrl)" alt="Sealed Proof Thumbnail" class="pod-sealed-thumb" />
+                    <span class="pod-sealed-badge">&check; Proof Sealed &bull; Click to Enlarge</span>
+                  </div>
+                  <div class="pod-complete-btn-box">
+                    <p class="pod-complete-instruction">Both verification steps completed (OTP + Photo Proof). Click below to mark delivery as COMPLETED.</p>
+                    <button
+                      type="button"
+                      class="btn btn-success btn-lg"
+                      (click)="completeDelivery()"
+                      [disabled]="actionLoading()"
+                    >
+                      {{ actionLoading() ? 'Completing...' : '✓ Complete Delivery' }}
+                    </button>
+                  </div>
+                </div>
+              }
+            }
+          </div>
+        }
+
+        <!-- Agent Action Step 5: Terminal Completed -->
+        @else if (d.package.status === 'DELIVERED') {
+          <div class="banner-success">
+            <span class="banner-icon">&check;</span>
+            <div>
+              <strong>Delivery Fully Completed</strong>
+              <p>Verified on {{ d.delivery?.actualDeliveryTime | date: 'medium' }}. Workload decremented and booking marked COMPLETED.</p>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ADMIN VIEW -->
+    @if (userRole() === 'ADMIN') {
+      <div class="card admin-audit-card">
+        <div class="console-header">
+          <div class="icon-circle admin-icon">
+            <dh-icon name="shield"></dh-icon>
+          </div>
+          <div>
+            <h3 class="v-title">OTP Security &amp; Verification Audit</h3>
+            <p class="v-sub">Cryptographic verification states sealed in backend database</p>
+          </div>
+        </div>
+
+        <div class="audit-grid">
+          <div class="audit-tile">
+            <span class="audit-label">Pickup OTP Status</span>
+            <div class="audit-status">
+              @if (d.delivery?.pickupOtp?.verified) {
+                <span class="badge-verified">&check; VERIFIED</span>
+                <span class="audit-time">{{ d.delivery?.pickupOtp?.verifiedAt | date: 'medium' }}</span>
+              } @else if (d.package.status === 'AGENT_ASSIGNED') {
+                <span class="badge-pending">&bull; PENDING PICKUP</span>
+              } @else {
+                <span class="badge-muted">NOT ISSUED / COMPLETED</span>
+              }
+            </div>
+            <div class="audit-meta">
+              <span>Attempts remaining: {{ d.delivery?.pickupOtp?.attemptsRemaining ?? 'N/A' }}</span>
+            </div>
+          </div>
+
+          <div class="audit-tile">
+            <span class="audit-label">Delivery OTP Status</span>
+            <div class="audit-status">
+              @if (d.delivery?.deliveryOtp?.verified) {
+                <span class="badge-verified">&check; VERIFIED</span>
+                <span class="audit-time">{{ d.delivery?.deliveryOtp?.verifiedAt | date: 'medium' }}</span>
+              } @else if (d.package.status === 'OUT_FOR_DELIVERY') {
+                <span class="badge-pending">&bull; PENDING HANDOVER</span>
+              } @else {
+                <span class="badge-muted">NOT ISSUED / COMPLETED</span>
+              }
+            </div>
+            <div class="audit-meta">
+              <span>Attempts remaining: {{ d.delivery?.deliveryOtp?.attemptsRemaining ?? 'N/A' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <p class="audit-footer-note">
+          &bull; Security Protocol: Plaintext OTP codes are never exposed to administrative views. Hashes are verified via bcrypt.
+        </p>
+      </div>
+    }
+
+    <!-- Digital Proof of Delivery (POD) Card (Feature 1) -->
+    @if (d.proofOfDelivery?.photoUrl || d.delivery?.proofOfDelivery?.photoUrl || d.package.proofOfDelivery?.photoUrl) {
+      @let pod = d.proofOfDelivery || d.delivery?.proofOfDelivery || d.package.proofOfDelivery;
+      <div class="card pod-card">
+        <div class="pod-header">
+          <div class="icon-circle pod-icon">
+            <dh-icon name="shield"></dh-icon>
+          </div>
+          <div>
+            <h3 class="v-title">Digital Proof of Delivery (POD)</h3>
+            <p class="v-sub">Official photo evidence &amp; cryptographic OTP verification recorded at parcel handover</p>
+          </div>
+        </div>
+
+        <div class="pod-content-grid">
+          <div class="pod-photo-container" (click)="openPhotoModal(pod!.photoUrl)">
+            <img [src]="resolvePhotoUrl(pod!.photoUrl)" alt="Proof of Delivery Photo" class="pod-img" />
+            <div class="pod-overlay">
+              <span>View Full Resolution &nearr;</span>
+            </div>
+          </div>
+
+          <div class="pod-details-list">
+            <div class="pod-detail-item">
+              <span class="pod-detail-label">Handover Authentication</span>
+              <span class="badge-verified">&check; Customer OTP Verified</span>
+            </div>
+            <div class="pod-detail-item">
+              <span class="pod-detail-label">Captured Timestamp</span>
+              <span class="pod-detail-value">{{ pod!.capturedAt | date: 'medium' }}</span>
+            </div>
+            @if (d.assignedAgent) {
+              <div class="pod-detail-item">
+                <span class="pod-detail-label">Delivering Courier Agent</span>
+                <span class="pod-detail-value">{{ d.assignedAgent.name }} ({{ d.assignedAgent.agentCode }})</span>
+              </div>
+            }
+            <div class="pod-security-note">
+              <span class="sec-dot">&bull;</span>
+              <span>This immutable record certifies physical recipient handover under DeliveryHub delivery assurance guidelines.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- 3. Core Delivery Details Grid -->
+    <div class="grid grid-cols-2 detail-grid">
+      <div class="card">
+        <h3 class="card-title">Package Details</h3>
+        <dl class="kv">
+          <dt>Type</dt><dd>{{ d.package.packageType }}</dd>
+          <dt>Description</dt><dd>{{ d.package.description }}</dd>
+          <dt>Weight</dt><dd>{{ d.package.weight }} kg</dd>
+          <dt>Scheduled Date</dt><dd>{{ d.package.scheduledDate | date: 'MMM d, y, h:mm a' }}</dd>
+          <dt>Current State</dt><dd><dh-status-badge [status]="d.package.status"></dh-status-badge></dd>
+        </dl>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title">Route &amp; Destination</h3>
+        <div class="route">
+          <div>
+            <span class="route-label">Pickup Location (Origin)</span>
+            <p>{{ d.package.sourceLocation.address }}, {{ d.package.sourceLocation.city }}, {{ d.package.sourceLocation.state }} {{ d.package.sourceLocation.postalCode }}</p>
+          </div>
+          <div>
+            <span class="route-label">Delivery Location (Destination)</span>
+            <p>{{ d.package.destinationLocation.address }}, {{ d.package.destinationLocation.city }}, {{ d.package.destinationLocation.state }} {{ d.package.destinationLocation.postalCode }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card assignment-card">
+        <div class="assignment-header-row">
+          <div>
+            <h3 class="card-title">Courier Assignment &amp; Scoring</h3>
+            <p class="card-sub">Algorithmic matching based on real-time fleet telemetry</p>
+          </div>
+          @if (assignmentBreakdown(); as b) {
+            <div class="algorithm-score-badge" title="Algorithmic match rating">
+              <span class="score-label">Match Score</span>
+              <span class="score-val font-mono">{{ b.finalScore }}</span>
+            </div>
+          }
+        </div>
+
+        @if (d.assignedAgent) {
+          <!-- Courier Agent Profile Snapshot -->
+          <div class="agent-profile-snapshot">
+            <div class="agent-avatar-circle">
+              <dh-icon name="user"></dh-icon>
+            </div>
+            <div class="agent-name-meta">
+              <span class="agent-name-text">{{ d.assignedAgent.name }}</span>
+              <div class="agent-tag-row">
+                <span class="agent-code font-mono">{{ d.assignedAgent.agentCode }}</span>
+                <dh-status-badge [status]="d.assignedAgent.status"></dh-status-badge>
+                <span class="rating-badge">&star; {{ d.assignedAgent.rating }} / 5.0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Algorithmic Factor Breakdown -->
+          @if (assignmentBreakdown(); as b) {
+            <div class="score-breakdown-box">
+              <span class="breakdown-title">Algorithm Factor Breakdown</span>
+              <div class="factor-row">
+                <div class="factor-header">
+                  <span class="factor-name">Proximity &amp; Route Distance (Weight 40%)</span>
+                  <span class="factor-score font-mono">{{ b.distanceScore }}%</span>
+                </div>
+                <div class="factor-progress-bar">
+                  <div class="factor-progress-fill" [style.width.%]="b.distanceScore"></div>
+                </div>
+              </div>
+
+              <div class="factor-row">
+                <div class="factor-header">
+                  <span class="factor-name">Current Agent Workload (Weight 25%)</span>
+                  <span class="factor-score font-mono">{{ b.workloadScore }}%</span>
+                </div>
+                <div class="factor-progress-bar">
+                  <div class="factor-progress-fill" [style.width.%]="b.workloadScore"></div>
+                </div>
+              </div>
+
+              <div class="factor-row">
+                <div class="factor-header">
+                  <span class="factor-name">Customer Quality Rating (Weight 20%)</span>
+                  <span class="factor-score font-mono">{{ b.ratingScore }}%</span>
+                </div>
+                <div class="factor-progress-bar">
+                  <div class="factor-progress-fill" [style.width.%]="b.ratingScore"></div>
+                </div>
+              </div>
+
+              <div class="factor-row">
+                <div class="factor-header">
+                  <span class="factor-name">Historical On-Time Reliability (Weight 15%)</span>
+                  <span class="factor-score font-mono">{{ b.onTimeScore }}%</span>
+                </div>
+                <div class="factor-progress-bar">
+                  <div class="factor-progress-fill" [style.width.%]="b.onTimeScore"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Algorithm Compliance Checklist -->
+            <div class="algorithm-checks">
+              <div class="check-item"><span class="check-icon">&check;</span> Available Status Verified</div>
+              <div class="check-item"><span class="check-icon">&check;</span> Geographic Coverage Supported</div>
+              <div class="check-item"><span class="check-icon">&check;</span> Service Handling Matched</div>
+            </div>
+          }
+
+          <dl class="kv assignment-kv">
+            @if (d.assignment.distanceKm !== null) { <dt>Estimated Distance</dt><dd class="font-mono">{{ d.assignment.distanceKm }} km</dd> }
+            @if (d.assignment.estimatedMinutes !== null) { <dt>Estimated Transit</dt><dd class="font-mono">{{ d.assignment.estimatedMinutes }} mins</dd> }
+            @if (d.delivery?.pickupTime) { <dt>Picked Up At</dt><dd>{{ d.delivery?.pickupTime | date: 'medium' }}</dd> }
+            @if (d.delivery?.actualDeliveryTime) { <dt>Delivered At</dt><dd>{{ d.delivery?.actualDeliveryTime | date: 'medium' }}</dd> }
+          </dl>
+        } @else {
+          <p class="muted-note">{{ d.assignment.reason || 'No agent is currently assigned to this delivery.' }}</p>
+        }
+      </div>
+
+      <div class="card">
+        <h3 class="card-title">Booking Confirmation</h3>
+        @if (d.booking) {
+          <dl class="kv">
+            <dt>Booking #</dt><dd>{{ d.booking.bookingNumber }}</dd>
+            <dt>Confirmation Code</dt><dd class="mono-code">{{ d.booking.confirmationCode }}</dd>
+            <dt>Booking Status</dt><dd><dh-status-badge [status]="d.booking.status"></dh-status-badge></dd>
+            <dt>Created Date</dt><dd>{{ d.booking.createdAt | date: 'medium' }}</dd>
+          </dl>
+        } @else {
+          <p class="muted-note">No booking record created yet for this request.</p>
+        }
+      </div>
+    </div>
+
+    <!-- 4. Delivery Milestone History -->
+    <div class="card timeline-card">
+      <h3 class="card-title">Delivery Milestones &amp; Audit Trail</h3>
+      @if (d.history.length === 0) {
+        <p class="muted-note">No status history recorded yet.</p>
+      } @else {
+        <ul class="timeline">
+          @for (event of d.history; track event.id) {
+            <li>
+              <div class="timeline-dot"></div>
+              <div class="timeline-body">
+                <div class="timeline-head">
+                  <dh-status-badge [status]="event.status"></dh-status-badge>
+                  <span class="timeline-time">{{ event.timestamp | date: 'MMM d, y, h:mm a' }}</span>
+                </div>
+                <p class="timeline-remarks">{{ event.remarks }}</p>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+
+    <!-- Exception Reporting Modal (Agent) -->
+    @if (showExceptionModal()) {
+      <div class="modal-backdrop" (click)="closeExceptionModal()">
+        <div class="modal-card" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3 class="modal-title">⚠️ Report Delivery Exception</h3>
+            <button type="button" class="modal-close" (click)="closeExceptionModal()">&times;</button>
+          </div>
+          <div class="modal-body">
+            <p class="modal-desc">
+              Record a delivery exception for parcel <strong>{{ d.package.trackingNumber }}</strong>. This will transition status to <strong>FAILED</strong>, decrement your active workload, and notify customer with rescheduling options.
+            </p>
+            <div class="form-group">
+              <label for="exceptionReasonSelect" class="form-label">Exception Reason</label>
+              <select
+                id="exceptionReasonSelect"
+                [ngModel]="exceptionReason()"
+                (ngModelChange)="exceptionReason.set($event)"
+                class="form-select"
+              >
+                @for (reason of exceptionReasons; track reason) {
+                  <option [value]="reason">{{ reason }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="exceptionNoteInput" class="form-label">Courier Remarks / Context (Optional)</label>
+              <textarea
+                id="exceptionNoteInput"
+                [ngModel]="exceptionNote()"
+                (ngModelChange)="exceptionNote.set($event)"
+                rows="3"
+                placeholder="e.g. Customer unreachable after repeated calls, gate locked..."
+                class="form-textarea"
+              ></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeExceptionModal()" [disabled]="exceptionLoading()">
+              Cancel
+            </button>
+            <button type="button" class="btn btn-danger" (click)="submitException()" [disabled]="exceptionLoading()">
+              {{ exceptionLoading() ? 'Reporting...' : 'Confirm Delivery Failure' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Photo Lightbox Modal -->
+    @if (podEnlarged() && podModalPhotoUrl()) {
+      <div class="modal-backdrop lightbox-backdrop" (click)="closePhotoModal()">
+        <div class="lightbox-dialog" (click)="$event.stopPropagation()">
+          <div class="lightbox-header">
+            <span class="lightbox-title">Digital Proof of Delivery &bull; {{ d.package.trackingNumber }}</span>
+            <button type="button" class="lightbox-close" (click)="closePhotoModal()">&times;</button>
+          </div>
+          <div class="lightbox-body">
+            <img [src]="resolvePhotoUrl(podModalPhotoUrl()!)" alt="Enlarged Proof of Delivery" class="lightbox-image" />
+          </div>
+        </div>
+      </div>
+    }
+  }
+}

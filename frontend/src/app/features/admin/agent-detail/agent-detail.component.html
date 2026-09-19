@@ -1,0 +1,240 @@
+<div class="page-header">
+  <div>
+    <h1>{{ isNew() ? 'Add Agent' : 'Manage Agent' }}</h1>
+    <p class="subtitle">
+      {{ isNew() ? 'Create an agent profile and configure delivery coverage in Neo4j.' : (agent()?.agentCode + ' — ' + agent()?.user?.fullName) }}
+    </p>
+  </div>
+  @if (!isNew() && agent()) {
+    <dh-status-badge [status]="agent()!.status"></dh-status-badge>
+  }
+</div>
+
+@if (loading()) {
+  <dh-loading-spinner label="Loading agent details…"></dh-loading-spinner>
+} @else {
+  <div class="grid grid-cols-2 top-grid">
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate class="form-container">
+      @if (errorMessage()) {
+        <div class="alert alert-error" role="alert">{{ errorMessage() }}</div>
+      }
+
+      <div class="card">
+        <h3 class="card-title">Basic Profile</h3>
+
+        @if (isNew()) {
+          <div class="field">
+            <label for="userId">Agent User Account *</label>
+            @if (agentUsers().length > 0) {
+              <select id="userId" formControlName="userId">
+                <option value="">-- Select an AGENT user --</option>
+                @for (u of agentUsers(); track u.id) {
+                  <option [value]="u.id">{{ u.fullName }} ({{ u.email }})</option>
+                }
+              </select>
+            } @else {
+              <input id="userId" type="text" formControlName="userId" placeholder="MongoDB User ID of AGENT role user" />
+            }
+            <span class="hint">Select a registered user who has the AGENT role.</span>
+          </div>
+        } @else {
+          @if (agent(); as a) {
+            <div class="field">
+              <label>Assigned User</label>
+              <div class="read-only-user">
+                <strong>{{ a.user.fullName }}</strong>
+                <span class="user-meta">{{ a.user.email }} &bull; {{ a.user.phone }}</span>
+              </div>
+            </div>
+          }
+        }
+
+        <div class="field-row">
+          <div class="field">
+            <label for="agentCode">Agent Code *</label>
+            <input id="agentCode" type="text" formControlName="agentCode" placeholder="e.g. AGENT-001" />
+          </div>
+
+          <div class="field">
+            <label for="vehicleType">Vehicle Type *</label>
+            <select id="vehicleType" formControlName="vehicleType">
+              @for (v of vehicleTypes; track v) { <option [value]="v">{{ v }}</option> }
+            </select>
+          </div>
+        </div>
+
+        @if (isNew()) {
+          <div class="field">
+            <label for="status">Initial Status</label>
+            <select id="status" formControlName="status">
+              @for (s of statuses; track s) { <option [value]="s">{{ s }}</option> }
+            </select>
+            <span class="hint">Set to AVAILABLE so the agent is immediately eligible for dispatch.</span>
+          </div>
+        }
+      </div>
+
+      <!-- Served Locations Section (Neo4j SERVES) -->
+      <div class="card relation-card">
+        <div class="section-header">
+          <div>
+            <h3 class="card-title">Served Locations (Graph Coverage)</h3>
+            <p class="section-desc">
+              Neo4j matches packages when an agent SERVES the pickup & drop states.
+            </p>
+          </div>
+          <div class="quick-links">
+            <button type="button" class="btn-link" (click)="selectAllServedLocations()">Select all</button>
+            <span class="divider">|</span>
+            <button type="button" class="btn-link" (click)="clearAllServedLocations()">Clear</button>
+          </div>
+        </div>
+
+        @if (locations().length === 0) {
+          <p class="empty-hint">No locations found. Add locations first in Location Management.</p>
+        } @else {
+          <div class="checkbox-grid">
+            @for (loc of locations(); track loc.id) {
+              <label class="checkbox-item" [class.checked]="isServed(loc.id)">
+                <input
+                  type="checkbox"
+                  [checked]="isServed(loc.id)"
+                  (change)="toggleServedLocation(loc.id)"
+                />
+                <div class="checkbox-label">
+                  <span class="item-title">{{ loc.name }}</span>
+                  <span class="item-subtitle">{{ loc.city }}, <span class="badge-state">{{ loc.state }}</span></span>
+                </div>
+              </label>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Available Locations Section (Neo4j AVAILABLE_IN) -->
+      <div class="card relation-card">
+        <div class="section-header">
+          <div>
+            <h3 class="card-title">Stationed / Available Locations</h3>
+            <p class="section-desc">
+              Hubs or operational areas where the agent is currently available.
+            </p>
+          </div>
+          <div class="quick-links">
+            <button type="button" class="btn-link" (click)="selectAllAvailableLocations()">Select all</button>
+            <span class="divider">|</span>
+            <button type="button" class="btn-link" (click)="clearAllAvailableLocations()">Clear</button>
+          </div>
+        </div>
+
+        @if (locations().length === 0) {
+          <p class="empty-hint">No locations available.</p>
+        } @else {
+          <div class="checkbox-grid">
+            @for (loc of locations(); track loc.id) {
+              <label class="checkbox-item" [class.checked]="isAvailable(loc.id)">
+                <input
+                  type="checkbox"
+                  [checked]="isAvailable(loc.id)"
+                  (change)="toggleAvailableLocation(loc.id)"
+                />
+                <div class="checkbox-label">
+                  <span class="item-title">{{ loc.name }}</span>
+                  <span class="item-subtitle">{{ loc.city }}</span>
+                </div>
+              </label>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Offered Services Section (Neo4j OFFERS) -->
+      <div class="card relation-card">
+        <div class="section-header">
+          <div>
+            <h3 class="card-title">Offered Delivery Services</h3>
+            <p class="section-desc">
+              Package delivery tiers this agent can fulfill.
+            </p>
+          </div>
+          <div class="quick-links">
+            <button type="button" class="btn-link" (click)="selectAllOfferedServices()">Select all</button>
+            <span class="divider">|</span>
+            <button type="button" class="btn-link" (click)="clearAllOfferedServices()">Clear</button>
+          </div>
+        </div>
+
+        @if (services().length === 0) {
+          <p class="empty-hint">No service catalog items found.</p>
+        } @else {
+          <div class="checkbox-grid">
+            @for (srv of services(); track srv.id) {
+              <label class="checkbox-item" [class.checked]="isOffered(srv.id)">
+                <input
+                  type="checkbox"
+                  [checked]="isOffered(srv.id)"
+                  (change)="toggleOfferedService(srv.id)"
+                />
+                <div class="checkbox-label">
+                  <span class="item-title">{{ srv.name }} ({{ srv.serviceCode }})</span>
+                  <span class="item-subtitle">Base: ₹{{ srv.basePrice }}</span>
+                </div>
+              </label>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="form-actions">
+        <a routerLink="/admin/agents" class="btn btn-ghost">Cancel</a>
+        <button type="submit" class="btn btn-primary" [disabled]="saving()">
+          {{ saving() ? 'Saving…' : (isNew() ? 'Create Agent' : 'Save Changes') }}
+        </button>
+      </div>
+    </form>
+
+    @if (!isNew() && agent(); as a) {
+      <div class="sidebar-column">
+        <div class="card">
+          <h3 class="card-title">Status Control</h3>
+          <p class="hint status-hint">Change agent availability for the assignment engine.</p>
+          <div class="status-buttons">
+            @for (s of statuses; track s) {
+              <button
+                type="button"
+                class="btn btn-sm"
+                [class.btn-primary]="a.status === s"
+                [class.btn-secondary]="a.status !== s"
+                (click)="changeStatus(s)"
+              >{{ s }}</button>
+            }
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">Coverage Summary</h3>
+          <dl class="kv">
+            <dt>Served Locations</dt>
+            <dd><span class="badge">{{ servedLocationIds().length }}</span> locations</dd>
+            <dt>Stationed Areas</dt>
+            <dd><span class="badge">{{ availableLocationIds().length }}</span> areas</dd>
+            <dt>Services Offered</dt>
+            <dd><span class="badge">{{ offeredServiceIds().length }}</span> tiers</dd>
+          </dl>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">Performance Snapshot</h3>
+          <dl class="kv">
+            <dt>Active deliveries</dt><dd>{{ a.activeDeliveries }}</dd>
+            <dt>Completed deliveries</dt><dd>{{ a.completedDeliveries }}</dd>
+            <dt>On-time deliveries</dt><dd>{{ a.onTimeDeliveries }}</dd>
+            <dt>Rating</dt><dd>{{ a.rating }} / 5</dd>
+            <dt>Reward points</dt><dd>{{ a.rewardPoints }}</dd>
+            <dt>Penalty points</dt><dd>{{ a.penaltyPoints }}</dd>
+          </dl>
+        </div>
+      </div>
+    }
+  </div>
+}

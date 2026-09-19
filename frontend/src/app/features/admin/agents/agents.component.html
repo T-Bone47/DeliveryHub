@@ -1,0 +1,146 @@
+<div class="page-header">
+  <div>
+    <div class="header-pretitle">
+      <span class="role-pill">FLEET RESOURCE MANAGEMENT</span>
+    </div>
+    <h1>Courier Fleet Roster</h1>
+    <p class="subtitle">Monitor active courier availability, assigned load, vehicles, and performance metrics.</p>
+  </div>
+  <div class="header-actions">
+    <button type="button" class="btn btn-secondary btn-sm" (click)="load()" [disabled]="loading()">
+      <dh-icon name="refresh"></dh-icon>
+      <span>Refresh</span>
+    </button>
+    <a routerLink="/admin/agents/new" class="btn btn-primary btn-sm">
+      <dh-icon name="plus"></dh-icon>
+      <span>Provision Agent</span>
+    </a>
+  </div>
+</div>
+
+@if (loading()) {
+  <dh-loading-spinner label="Synchronizing courier fleet directory…"></dh-loading-spinner>
+} @else if (error()) {
+  <dh-error-state [message]="error()!" (retry)="load()"></dh-error-state>
+} @else if (agents().length === 0) {
+  <dh-empty-state
+    title="No registered couriers"
+    description="Provision an agent profile for an existing courier account to begin dispatch operations."
+  >
+    <a routerLink="/admin/agents/new" class="btn btn-primary btn-sm">
+      <dh-icon name="plus"></dh-icon>
+      <span>Provision Agent</span>
+    </a>
+  </dh-empty-state>
+} @else {
+  <!-- Desktop Table View -->
+  <div class="card table-card desktop-only">
+    <div class="table-scroll">
+      <table class="dh-table">
+        <thead>
+          <tr>
+            <th>Courier Agent</th>
+            <th>Agent Code</th>
+            <th>Vehicle Asset</th>
+            <th>Status</th>
+            <th>Active Load</th>
+            <th>Delivered</th>
+            <th>Rating</th>
+            <th class="text-right">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (agent of agents(); track agent.id) {
+            <tr>
+              <td>
+                <div class="agent-cell">
+                  <div class="agent-avatar">{{ agent.user.fullName.charAt(0).toUpperCase() }}</div>
+                  <div>
+                    <div class="agent-name">{{ agent.user.fullName }}</div>
+                    <div class="agent-email">{{ agent.user.email }}</div>
+                  </div>
+                </div>
+              </td>
+              <td><span class="agent-code font-mono">{{ agent.agentCode }}</span></td>
+              <td>
+                <span class="vehicle-pill">
+                  <dh-icon name="truck"></dh-icon>
+                  <span>{{ agent.vehicleType }}</span>
+                </span>
+              </td>
+              <td><dh-status-badge [status]="agent.status"></dh-status-badge></td>
+              <td>
+                <div class="workload-pill" [class.heavy]="agent.activeDeliveries >= 3">
+                  <span class="load-num font-mono">{{ agent.activeDeliveries }}</span>
+                  <span class="load-sub">active</span>
+                </div>
+              </td>
+              <td><span class="font-mono">{{ agent.completedDeliveries }}</span></td>
+              <td>
+                <div class="rating-box">
+                  <dh-icon name="star"></dh-icon>
+                  <span class="rating-val font-mono">{{ agent.rating | number: '1.1-1' }}</span>
+                </div>
+              </td>
+              <td class="text-right">
+                <a [routerLink]="['/admin/agents', agent.id]" class="btn btn-secondary btn-sm">
+                  <span>Manage</span>
+                  <dh-icon name="arrow-right"></dh-icon>
+                </a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Mobile Cards View -->
+  <div class="mobile-agents-cards mobile-only">
+    @for (agent of agents(); track agent.id) {
+      <div class="card mobile-agent-card">
+        <div class="agent-card-header">
+          <div class="agent-cell">
+            <div class="agent-avatar">{{ agent.user.fullName.charAt(0).toUpperCase() }}</div>
+            <div>
+              <div class="agent-name">{{ agent.user.fullName }}</div>
+              <span class="agent-code font-mono">{{ agent.agentCode }}</span>
+            </div>
+          </div>
+          <dh-status-badge [status]="agent.status"></dh-status-badge>
+        </div>
+
+        <div class="agent-stats-grid">
+          <div class="stat-cell">
+            <span class="stat-lbl">Vehicle</span>
+            <span class="vehicle-pill sm">
+              <dh-icon name="truck"></dh-icon>
+              <span>{{ agent.vehicleType }}</span>
+            </span>
+          </div>
+          <div class="stat-cell">
+            <span class="stat-lbl">Active Load</span>
+            <span class="stat-val font-mono">{{ agent.activeDeliveries }} active</span>
+          </div>
+          <div class="stat-cell">
+            <span class="stat-lbl">Completed</span>
+            <span class="stat-val font-mono">{{ agent.completedDeliveries }} pkgs</span>
+          </div>
+          <div class="stat-cell">
+            <span class="stat-lbl">Rating</span>
+            <div class="rating-box">
+              <dh-icon name="star"></dh-icon>
+              <span class="rating-val font-mono">{{ agent.rating | number: '1.1-1' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="agent-card-actions">
+          <a [routerLink]="['/admin/agents', agent.id]" class="btn btn-primary btn-sm btn-full">
+            <span>Manage Fleet Profile &rarr;</span>
+          </a>
+        </div>
+      </div>
+    }
+  </div>
+}

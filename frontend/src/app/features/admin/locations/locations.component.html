@@ -1,0 +1,54 @@
+<div class="page-header">
+  <div>
+    <h1>Locations</h1>
+    <p class="subtitle">Serviceable locations used for pickup and delivery.</p>
+  </div>
+  <button type="button" class="btn btn-primary" (click)="showForm.set(!showForm())">
+    {{ showForm() ? 'Cancel' : '+ Add Location' }}
+  </button>
+</div>
+
+@if (showForm()) {
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate class="card form-card">
+    @if (formError()) { <div class="alert alert-error">{{ formError() }}</div> }
+    <div class="grid grid-cols-2">
+      <div class="field"><label for="name">Name</label><input id="name" type="text" formControlName="name" /></div>
+      <div class="field"><label for="city">City</label><input id="city" type="text" formControlName="city" /></div>
+      <div class="field"><label for="state">State</label><input id="state" type="text" formControlName="state" /></div>
+      <div class="field"><label for="postalCode">Postal code</label><input id="postalCode" type="text" formControlName="postalCode" /></div>
+      <div class="field"><label for="latitude">Latitude</label><input id="latitude" type="number" step="0.000001" formControlName="latitude" /></div>
+      <div class="field"><label for="longitude">Longitude</label><input id="longitude" type="number" step="0.000001" formControlName="longitude" /></div>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Create Location' }}</button>
+    </div>
+  </form>
+}
+
+@if (loading()) {
+  <dh-loading-spinner label="Loading locations…"></dh-loading-spinner>
+} @else if (error()) {
+  <dh-error-state [message]="error()!" (retry)="load()"></dh-error-state>
+} @else if (locations().length === 0) {
+  <dh-empty-state title="No locations yet" description="Add your first serviceable location."></dh-empty-state>
+} @else {
+  <div class="table-scroll">
+    <table class="dh-table">
+      <thead><tr><th>Name</th><th>City</th><th>State</th><th>Postal code</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        @for (location of locations(); track location.id) {
+          <tr>
+            <td>{{ location.name }}</td>
+            <td>{{ location.city }}</td>
+            <td>{{ location.state }}</td>
+            <td>{{ location.postalCode }}</td>
+            <td><dh-status-badge [status]="location.isActive ? 'ACTIVE' : 'INACTIVE'"></dh-status-badge></td>
+            <td><button type="button" class="btn btn-ghost btn-sm" (click)="toggleActive(location)">
+              {{ location.isActive ? 'Deactivate' : 'Activate' }}
+            </button></td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

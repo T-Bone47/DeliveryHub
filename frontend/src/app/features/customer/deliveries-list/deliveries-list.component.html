@@ -1,0 +1,161 @@
+<div class="page-header">
+  <div>
+    <div class="header-pretitle">
+      <span class="history-pill">SHIPMENT ARCHIVE &amp; ACTIVE ORDERS</span>
+    </div>
+    <h1>My Deliveries</h1>
+    <p class="subtitle">Live tracking passes, OTP handovers, and verified digital receipts.</p>
+  </div>
+  <a routerLink="/customer/create-delivery" class="btn btn-primary btn-book-delivery">
+    <dh-icon name="plus"></dh-icon>
+    <span>Book Express Delivery</span>
+  </a>
+</div>
+
+<!-- Swiggy-Style Filter Pill Strip -->
+<div class="filter-strip-container card">
+  <div class="filter-pills-row">
+    <button
+      type="button"
+      class="filter-pill"
+      [class.active]="statusFilter() === ''"
+      (click)="onStatusChange('')"
+    >
+      <span>All Orders</span>
+      <span class="pill-badge">{{ total() }}</span>
+    </button>
+    <button
+      type="button"
+      class="filter-pill"
+      [class.active]="statusFilter() === 'IN_TRANSIT'"
+      (click)="onStatusChange('IN_TRANSIT')"
+    >
+      <dh-icon name="scooter"></dh-icon>
+      <span>In Transit</span>
+    </button>
+    <button
+      type="button"
+      class="filter-pill"
+      [class.active]="statusFilter() === 'OUT_FOR_DELIVERY'"
+      (click)="onStatusChange('OUT_FOR_DELIVERY')"
+    >
+      <dh-icon name="zap"></dh-icon>
+      <span>Out for Delivery</span>
+    </button>
+    <button
+      type="button"
+      class="filter-pill"
+      [class.active]="statusFilter() === 'DELIVERED'"
+      (click)="onStatusChange('DELIVERED')"
+    >
+      <dh-icon name="check"></dh-icon>
+      <span>Delivered</span>
+    </button>
+    <button
+      type="button"
+      class="filter-pill filter-pill-failed"
+      [class.active]="statusFilter() === 'FAILED'"
+      (click)="onStatusChange('FAILED')"
+    >
+      <dh-icon name="alert"></dh-icon>
+      <span>Exceptions</span>
+    </button>
+  </div>
+
+  <div class="more-filter-box">
+    <label for="statusDropdown" class="sr-only">More Statuses</label>
+    <select id="statusDropdown" [value]="statusFilter()" (change)="onStatusChange($any($event.target).value)" class="filter-select">
+      <option value="">Specific Status Filter...</option>
+      @for (status of statuses; track status) {
+        <option [value]="status">{{ status }}</option>
+      }
+    </select>
+  </div>
+</div>
+
+@if (loading()) {
+  <dh-loading-spinner label="Loading your deliveries…"></dh-loading-spinner>
+} @else if (error()) {
+  <dh-error-state [message]="error()!" (retry)="load()"></dh-error-state>
+} @else if (packages().length === 0) {
+  <dh-empty-state title="No deliveries found" description="Try a different filter, or book your next parcel shipment.">
+    <a routerLink="/customer/create-delivery" class="btn btn-primary btn-sm">Create New Delivery</a>
+  </dh-empty-state>
+} @else {
+  <!-- Order Feed Cards (Swiggy / Zomato order card design) -->
+  <div class="orders-feed">
+    @for (pkg of packages(); track pkg.id) {
+      <div class="card order-card" [class.order-active]="pkg.status === 'OUT_FOR_DELIVERY' || pkg.status === 'IN_TRANSIT'">
+        <div class="order-card-top">
+          <div class="order-identity">
+            <div class="order-icon-squircle">
+              <dh-icon name="package"></dh-icon>
+            </div>
+            <div>
+              <div class="order-id-row">
+                <a [routerLink]="['/customer/deliveries', pkg.id]" class="tracking-number font-mono">
+                  {{ pkg.trackingNumber }}
+                </a>
+                <span class="pkg-type-tag">{{ pkg.packageType }}</span>
+              </div>
+              <span class="order-date">
+                Scheduled: {{ pkg.scheduledDate | date: 'MMM d, y, h:mm a' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="order-status-wrap">
+            <dh-status-badge [status]="pkg.status"></dh-status-badge>
+          </div>
+        </div>
+
+        <div class="order-route-strip">
+          <div class="route-point">
+            <div class="point-dot origin"></div>
+            <div class="point-text">
+              <span class="point-label">From</span>
+              <span class="point-city">{{ pkg.sourceLocation.city }}</span>
+            </div>
+          </div>
+
+          <div class="route-connector">
+            <div class="connector-line"></div>
+            <div class="connector-icon">
+              <dh-icon name="scooter"></dh-icon>
+            </div>
+          </div>
+
+          <div class="route-point">
+            <div class="point-dot destination"></div>
+            <div class="point-text">
+              <span class="point-label">To</span>
+              <span class="point-city">{{ pkg.destinationLocation.city }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="order-card-bottom">
+          <div class="order-weight-spec">
+            <span class="spec-label">Weight:</span>
+            <span class="spec-val font-mono">{{ pkg.weight }} kg</span>
+            @if (pkg.description) {
+              <span class="bullet">&bull;</span>
+              <span class="pkg-desc-text">{{ pkg.description }}</span>
+            }
+          </div>
+
+          <div class="order-action-cell">
+            <a [routerLink]="['/customer/deliveries', pkg.id]" class="btn btn-primary btn-sm track-pill-btn">
+              <span>Track Live &bull; View Pass</span>
+              <dh-icon name="arrow-right"></dh-icon>
+            </a>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="pagination-wrap">
+    <dh-pagination [page]="page()" [totalPages]="totalPages()" [total]="total()" (pageChange)="onPageChange($event)"></dh-pagination>
+  </div>
+}

@@ -1,0 +1,214 @@
+<div class="page-header">
+  <div>
+    <div class="header-pretitle">
+      <span class="role-pill">ENTERPRISE COMMAND CONSOLE</span>
+    </div>
+    <h1>Operations Overview</h1>
+    <p class="subtitle">Real-time delivery network throughput, fleet utilization, and exception monitoring.</p>
+  </div>
+  <div class="header-actions">
+    <button type="button" class="btn btn-secondary btn-sm" (click)="load()" [disabled]="loading()">
+      <dh-icon name="refresh"></dh-icon>
+      <span>Refresh Metrics</span>
+    </button>
+  </div>
+</div>
+
+@if (loading()) {
+  <dh-loading-spinner label="Loading operations telemetry…"></dh-loading-spinner>
+} @else if (error()) {
+  <dh-error-state [message]="error()!" (retry)="load()"></dh-error-state>
+} @else {
+  <!-- 1. Top Operational KPIs -->
+  <div class="grid grid-cols-4">
+    <dh-stat-card
+      label="Total Packages"
+      [value]="totalPackages()"
+      icon="package"
+      tone="neutral"
+      hint="Cumulative registered shipments"
+    ></dh-stat-card>
+
+    <dh-stat-card
+      label="Active in Transit"
+      [value]="inTransitCount()"
+      icon="truck"
+      tone="neutral"
+      [hint]="pendingPackages() + ' pending pickup'"
+    ></dh-stat-card>
+
+    <dh-stat-card
+      label="Fleet Availability"
+      [value]="agentsAvailable() + ' / ' + totalAgents()"
+      icon="users"
+      tone="success"
+      hint="Active couriers online"
+    ></dh-stat-card>
+
+    <dh-stat-card
+      label="Active Exceptions"
+      [value]="failedPackages().length"
+      icon="alert"
+      [tone]="failedPackages().length > 0 ? 'warning' : 'neutral'"
+      [hint]="failedPackages().length > 0 ? 'Action required' : 'Operations nominal'"
+    ></dh-stat-card>
+  </div>
+
+  <!-- 2. Delivery Status Distribution Visualization -->
+  @if (deliveryDistribution(); as dist) {
+    <div class="card distribution-card">
+      <div class="dist-header">
+        <div>
+          <h3 class="dist-title">Delivery Status Distribution</h3>
+          <p class="dist-sub">Real-time state breakdown across {{ totalPackages() }} total packages</p>
+        </div>
+        <span class="coverage-badge">Network Live</span>
+      </div>
+
+      <div class="dist-bar-track" aria-label="Delivery status distribution visualization">
+        <div
+          class="dist-segment delivered"
+          [style.width.%]="dist.deliveredPct"
+          [title]="'Delivered: ' + dist.delivered + ' (' + dist.deliveredPct + '%)'"
+        ></div>
+        <div
+          class="dist-segment in-transit"
+          [style.width.%]="dist.inTransitPct"
+          [title]="'In Transit: ' + dist.inTransit + ' (' + dist.inTransitPct + '%)'"
+        ></div>
+        <div
+          class="dist-segment pending"
+          [style.width.%]="dist.pendingPct"
+          [title]="'Pending: ' + dist.pending + ' (' + dist.pendingPct + '%)'"
+        ></div>
+        @if (dist.failedPct > 0) {
+          <div
+            class="dist-segment failed"
+            [style.width.%]="dist.failedPct"
+            [title]="'Exceptions: ' + dist.failed + ' (' + dist.failedPct + '%)'"
+          ></div>
+        }
+      </div>
+
+      <div class="dist-legend">
+        <div class="legend-item">
+          <span class="legend-dot delivered"></span>
+          <span class="legend-name">Delivered:</span>
+          <span class="legend-val font-mono">{{ dist.delivered }} ({{ dist.deliveredPct }}%)</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot in-transit"></span>
+          <span class="legend-name">In Transit:</span>
+          <span class="legend-val font-mono">{{ dist.inTransit }} ({{ dist.inTransitPct }}%)</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot pending"></span>
+          <span class="legend-name">Pending Assignment:</span>
+          <span class="legend-val font-mono">{{ dist.pending }} ({{ dist.pendingPct }}%)</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot failed"></span>
+          <span class="legend-name">Exceptions:</span>
+          <span class="legend-val font-mono">{{ dist.failed }} ({{ dist.failedPct }}%)</span>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- 3. Active Delivery Exceptions (Action Priority) -->
+  @if (failedPackages().length > 0) {
+    <div class="card section exception-section">
+      <div class="section-header exception-header">
+        <div class="exception-title-box">
+          <span class="pulse-dot"></span>
+          <h2>Active Delivery Exceptions ({{ failedPackages().length }})</h2>
+        </div>
+        <span class="exception-hint">Parcels requiring customer rescheduling or operational reassignment</span>
+      </div>
+      <div class="table-scroll">
+        <table class="dh-table">
+          <thead>
+            <tr>
+              <th>Tracking #</th>
+              <th>Exception Reason</th>
+              <th>Courier Remarks</th>
+              <th>Attempted At</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (pkg of failedPackages(); track pkg.id) {
+              <tr>
+                <td>
+                  <a [routerLink]="['/admin/packages', pkg.id]" class="tracking-link font-mono">
+                    {{ pkg.trackingNumber }}
+                  </a>
+                </td>
+                <td>
+                  <span class="reason-pill">{{ pkg.latestException?.reason || 'Delivery Exception' }}</span>
+                </td>
+                <td class="remarks-cell">{{ pkg.latestException?.note || '—' }}</td>
+                <td>{{ (pkg.latestException?.reportedAt || pkg.updatedAt) | date: 'MMM d, y, h:mm a' }}</td>
+                <td>
+                  <a [routerLink]="['/admin/packages', pkg.id]" class="btn btn-secondary btn-sm">
+                    Inspect &bull; Resolve &rarr;
+                  </a>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- 4. Recent Deliveries Log -->
+  <div class="card section">
+    <div class="section-header">
+      <div>
+        <h2>Recent Packages Handled</h2>
+        <p class="section-sub">Live feed of parcel requests moving through the dispatch engine</p>
+      </div>
+      <a routerLink="/admin/packages" class="btn btn-secondary btn-sm">
+        <span>View Full Manifest</span>
+        <dh-icon name="arrow-right"></dh-icon>
+      </a>
+    </div>
+    @if (recentPackages().length === 0) {
+      <dh-empty-state title="No packages yet" description="Delivery requests created by customers will appear here."></dh-empty-state>
+    } @else {
+      <div class="table-scroll">
+        <table class="dh-table">
+          <thead>
+            <tr>
+              <th>Tracking #</th>
+              <th>Type</th>
+              <th>Scheduled</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (pkg of recentPackages(); track pkg.id) {
+              <tr>
+                <td>
+                  <a [routerLink]="['/admin/packages', pkg.id]" class="tracking-link font-mono">
+                    {{ pkg.trackingNumber }}
+                  </a>
+                </td>
+                <td>{{ pkg.packageType }}</td>
+                <td>{{ pkg.scheduledDate | date: 'MMM d, y' }}</td>
+                <td><dh-status-badge [status]="pkg.status"></dh-status-badge></td>
+                <td>
+                  <a [routerLink]="['/admin/packages', pkg.id]" class="btn btn-secondary btn-sm">
+                    Details
+                  </a>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+}

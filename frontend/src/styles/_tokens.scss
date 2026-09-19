@@ -1,0 +1,96 @@
+// DeliveryHub Swiggy/Zomato-inspired Hyperlocal Delivery Design Tokens
+:root {
+  // Brand & Action Palette (Selective DeliveryHub Orange)
+  --color-primary: #ea580c;
+  --color-primary-hover: #c2410c;
+  --color-primary-soft: #fff7ed;
+  --color-primary-gradient: linear-gradient(135deg, #ea580c 0%, #d97706 100%);
+  --color-primary-glow: rgba(234, 88, 12, 0.2);
+
+  // Operational Blue (Tracking, Navigation, Telemetry & Informational States)
+  --color-secondary: #2563eb;
+  --color-secondary-hover: #1d4ed8;
+  --color-secondary-soft: #eff6ff;
+  --color-accent: #10b981;
+  --color-accent-soft: #ecfdf5;
+
+  // Background & Surface Hierarchy (Clean, calm neutral logistics SaaS canvas)
+  --background: #f8fafc;
+  --background-subtle: #f1f5f9;
+  --surface: #ffffff;
+  --surface-elevated: #ffffff;
+  --surface-hover: #f8fafc;
+  --surface-muted: #f8fafc;
+
+  --color-background: var(--background);
+  --color-background-subtle: var(--background-subtle);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-hover: var(--surface-hover);
+  --color-surface-muted: var(--surface-muted);
+
+  // Subtle Structural Borders
+  --color-border: #e2e8f0;
+  --color-border-subtle: #edf2f7;
+  --color-border-strong: #cbd5e1;
+
+  // Typography Colors (WCAG AAA / AA compliant contrast on white surfaces)
+  --text-primary: #0f172a;        // Slate-900 (16:1 contrast ratio)
+  --text-secondary: #334155;      // Slate-700 (9.5:1 contrast ratio)
+  --text-muted: #64748b;          // Slate-500 (4.6:1 contrast ratio - compliant)
+  --text-disabled: #94a3b8;       // Slate-400
+  --text-link: #2563eb;           // Operational link blue (4.6:1 contrast ratio)
+
+  --color-text: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-muted: var(--text-muted);
+  --color-text-disabled: var(--text-disabled);
+  --color-link: var(--text-link);
+
+  // Semantic Status (Logistics Order & Execution States)
+  --color-success: #16a34a;
+  --color-success-text: #15803d;
+  --color-success-soft: #ecfdf5;
+  --color-warning: #d97706;
+  --color-warning-text: #b45309;
+  --color-warning-soft: #fffbeb;
+  --color-error: #dc2626;
+  --color-error-text: #b91c1c;
+  --color-error-soft: #fef2f2;
+  --color-info: #2563eb;
+  --color-info-text: #1e40af;
+  --color-info-soft: #eff6ff;
+
+  // Typography Families (Inter for operational clarity + Outfit for clean displays)
+  --font-sans: 'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Outfit', 'Inter', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  // Spacing Scale
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  // Smooth Friendly Border Radii (Swiss grid feel)
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  // Restrained Shadows (Elevation only where hierarchy requires it)
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+  --shadow-primary: 0 4px 14px rgba(234, 88, 12, 0.25);
+
+  // Layout Dimensions
+  --sidebar-width: 256px;
+  --topbar-height: 68px;
+}

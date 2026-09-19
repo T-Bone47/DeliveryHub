@@ -1,0 +1,217 @@
+.top-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.form-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.sidebar-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.card-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: var(--space-2);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.section-desc {
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.quick-links {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  cursor: pointer;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 500;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.divider {
+  color: var(--color-border-strong);
+}
+
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-2);
+  max-height: 240px;
+  overflow-y: auto;
+  padding-right: var(--space-1);
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    background: var(--color-surface-hover, rgba(0, 0, 0, 0.02));
+    border-color: var(--color-primary-soft, var(--color-border-strong));
+  }
+
+  &.checked {
+    background: var(--color-primary-soft, rgba(37, 99, 235, 0.05));
+    border-color: var(--color-primary);
+  }
+
+  input[type='checkbox'] {
+    margin-top: 3px;
+    accent-color: var(--color-primary);
+    cursor: pointer;
+  }
+}
+
+.checkbox-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+}
+
+.item-title {
+  font-weight: 500;
+  color: var(--color-text);
+  line-height: 1.2;
+}
+
+.item-subtitle {
+  font-size: 11.5px;
+  color: var(--color-text-secondary);
+}
+
+.badge-state {
+  display: inline-block;
+  background: var(--color-background);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-weight: 600;
+  font-size: 10.5px;
+}
+
+.read-only-user {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+}
+
+.user-meta {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+
+.status-hint {
+  margin-bottom: var(--space-3);
+  font-size: 12px;
+}
+
+.kv {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-2) var(--space-4);
+  margin: 0;
+}
+
+.kv dt {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+
+.kv dd {
+  margin: 0;
+  font-weight: 600;
+  font-size: 13.5px;
+}
+
+.status-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.alert-error {
+  background: var(--color-error-soft);
+  color: var(--color-error);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+}
+
+.empty-hint {
+  color: var(--color-text-secondary);
+  font-size: 12.5px;
+  font-style: italic;
+  margin: var(--space-2) 0;
+}
+
+.badge {
+  background: var(--color-primary-soft, #eff6ff);
+  color: var(--color-primary, #2563eb);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+@media (max-width: 960px) {
+  .top-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+**/node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+**/dist/
+build/
+.angular/
+**/.angular/
+
+# Environment and sensitive credentials
+.env
+*.env
+!.env.example
+!**/.env.example
+atlas-credentials.env
+
+# Uploads
+backend/uploads/*
+!backend/uploads/pod/.gitkeep
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS and Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Residual empty folder if present
+DeliveryHub-main/

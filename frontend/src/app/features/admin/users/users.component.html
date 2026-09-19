@@ -1,0 +1,31 @@
+<div class="page-header">
+  <div>
+    <h1>Users</h1>
+    <p class="subtitle">All registered customer, agent, and admin accounts.</p>
+  </div>
+</div>
+
+@if (loading()) {
+  <dh-loading-spinner label="Loading users…"></dh-loading-spinner>
+} @else if (error()) {
+  <dh-error-state [message]="error()!" (retry)="load()"></dh-error-state>
+} @else if (users().length === 0) {
+  <dh-empty-state title="No users found"></dh-empty-state>
+} @else {
+  <div class="table-scroll">
+    <table class="dh-table">
+      <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Status</th></tr></thead>
+      <tbody>
+        @for (user of users(); track user.id) {
+          <tr>
+            <td>{{ user.fullName }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.phone }}</td>
+            <td>{{ user.role }}</td>
+            <td><dh-status-badge [status]="user.isActive ? 'ACTIVE' : 'INACTIVE'"></dh-status-badge></td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

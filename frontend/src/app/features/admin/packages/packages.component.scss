@@ -1,0 +1,185 @@
+.header-pretitle {
+  margin-bottom: var(--space-1);
+
+  .role-pill {
+    display: inline-block;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--color-primary);
+    background: var(--color-primary-light);
+    padding: 3px 12px;
+    border-radius: var(--radius-full);
+  }
+}
+
+.filter-bar-card {
+  padding: var(--space-4) var(--space-6);
+  margin-bottom: var(--space-5);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+
+  .filter-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+  }
+
+  .filter-field {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .filter-label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-text-secondary);
+  }
+
+  .select-input {
+    min-width: 220px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: var(--radius-full);
+    border: 1.5px solid var(--color-border);
+    background: #fff;
+    color: var(--color-text);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+
+    &:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(255, 82, 0, 0.15);
+    }
+  }
+
+  .clear-filter-btn {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    &:hover { color: var(--color-error); }
+  }
+
+  .total-badge {
+    font-size: 12px;
+    font-weight: 800;
+    padding: 4px 12px;
+    background: #fff7ed;
+    color: var(--color-primary);
+    border-radius: var(--radius-full);
+    border: 1px solid rgba(255, 82, 0, 0.25);
+  }
+}
+
+.table-card {
+  padding: 0;
+  overflow: hidden;
+
+  .table-scroll {
+    overflow-x: auto;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  .pagination-footer {
+    padding: var(--space-4) var(--space-6);
+    border-top: 1px solid var(--color-border);
+    background: #fafafa;
+  }
+}
+
+.badge-success {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  background: var(--color-success-light);
+  color: var(--color-success);
+  font-weight: 600;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.text-right { text-align: right; }
+.text-muted { color: var(--color-text-muted); }
+
+/* Responsive Views */
+.desktop-only { display: block; }
+.mobile-only { display: none; }
+
+@media (max-width: 767px) {
+  .desktop-only { display: none !important; }
+  .mobile-only { display: flex !important; flex-direction: column; gap: var(--space-3); }
+
+  .mobile-pkg-card {
+    padding: var(--space-4);
+
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-3);
+    }
+
+    .tracking-code {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--color-primary);
+    }
+
+    .card-meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-2);
+      margin-bottom: var(--space-4);
+      padding-top: var(--space-2);
+      border-top: 1px solid var(--color-border);
+
+      .meta-lbl {
+        display: block;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--color-text-muted);
+      }
+
+      .meta-val {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--color-text);
+      }
+    }
+
+    .card-actions {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+
+    .btn-full {
+      width: 100%;
+      justify-content: center;
+      height: 40px;
+    }
+  }
+
+  .pagination-card {
+    padding: var(--space-3);
+  }
+}

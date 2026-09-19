@@ -1,0 +1,202 @@
+<div class="dash-hero-header">
+  <div>
+    <div class="greeting-pill">
+      <span class="pulse-beacon"></span>
+      <span>{{ greetingTime() }}, {{ auth.currentUser()?.fullName }}</span>
+    </div>
+    <h1 class="hero-title">Track your deliveries</h1>
+    <p class="hero-subtitle">Real-time hyperlocal tracking, verified partner dispatch, and OTP security.</p>
+  </div>
+  <div class="hero-cta-box">
+    <a routerLink="/customer/create-delivery" class="btn btn-primary btn-lg book-delivery-btn">
+      <dh-icon name="plus"></dh-icon>
+      <span>Send New Parcel</span>
+    </a>
+  </div>
+</div>
+
+@if (loading()) {
+  <dh-loading-spinner label="Connecting to live dispatch stream…"></dh-loading-spinner>
+} @else if (error()) {
+  <dh-error-state [message]="error()!" (retry)="load()"></dh-error-state>
+} @else {
+  <!-- 1. Swiggy / Zomato Live Order Tracker Hero -->
+  @if (activeDelivery(); as active) {
+    <div class="card swiggy-tracker-card">
+      <div class="tracker-topbar">
+        <div class="live-status-pill">
+          <span class="live-pulse"></span>
+          <span class="live-label">LIVE ORDER IN PROGRESS</span>
+        </div>
+        <div class="eta-pill">
+          <dh-icon name="zap"></dh-icon>
+          <span>ETA: ~25 MINS</span>
+        </div>
+        <dh-status-badge [status]="active.status"></dh-status-badge>
+      </div>
+
+      <div class="tracker-body">
+        <div class="route-hero">
+          <div class="city-node origin">
+            <div class="node-icon origin-pin"><dh-icon name="map-pin"></dh-icon></div>
+            <div>
+              <span class="node-city">{{ active.sourceLocation.city }}</span>
+              <span class="node-sub">Pickup Hub</span>
+            </div>
+          </div>
+
+          <div class="scooter-track">
+            <div class="track-line"></div>
+            <div class="scooter-avatar" title="Courier on the way">
+              <dh-icon name="scooter"></dh-icon>
+            </div>
+          </div>
+
+          <div class="city-node destination">
+            <div class="node-icon dest-pin"><dh-icon name="route"></dh-icon></div>
+            <div>
+              <span class="node-city">{{ active.destinationLocation.city }}</span>
+              <span class="node-sub">Destination</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="partner-meta-box">
+          <div class="partner-cell">
+            <div class="partner-avatar">
+              <dh-icon name="scooter"></dh-icon>
+            </div>
+            <div class="partner-info">
+              <div class="partner-name-row">
+                <span class="partner-name">Verified Delivery Partner En Route</span>
+                <span class="verified-partner-tag">Verified Partner ✓</span>
+              </div>
+              <div class="partner-details">
+                <span class="rating-badge">★ 4.9</span>
+                <span class="bullet">&bull;</span>
+                <span class="vehicle-info">{{ active.packageType }} &bull; {{ active.weight }} kg</span>
+                <span class="bullet">&bull;</span>
+                <span class="tracking-chip font-mono">{{ active.trackingNumber }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="action-dock">
+            <a [routerLink]="['/customer/deliveries', active.id]" class="btn btn-primary btn-lg track-order-cta">
+              <dh-icon name="zap"></dh-icon>
+              <span>Track Live &bull; View OTP Pass &rarr;</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <div class="card swiggy-all-clear-card">
+      <div class="clear-illustration">
+        <dh-icon name="check"></dh-icon>
+      </div>
+      <div class="clear-text">
+        <h3>All caught up! No active shipments</h3>
+        <p>Your previous packages have been delivered safely. Ready to send something new?</p>
+      </div>
+      <a routerLink="/customer/create-delivery" class="btn btn-primary">
+        <span>+ Book Instant Delivery</span>
+      </a>
+    </div>
+  }
+
+  <!-- 2. Hyperlocal Service Categories (Swiggy Genie / Instamart style) -->
+  <div class="quick-tiles-grid">
+    <a routerLink="/customer/create-delivery" class="card quick-tile">
+      <div class="tile-icon-box orange">
+        <dh-icon name="plus"></dh-icon>
+      </div>
+      <div class="tile-info">
+        <h4 class="tile-title">Book Express Delivery</h4>
+        <p class="tile-desc">Doorstep pickup with automatic courier dispatch</p>
+      </div>
+      <div class="tile-arrow">&rarr;</div>
+    </a>
+
+    <a routerLink="/customer/deliveries" class="card quick-tile">
+      <div class="tile-icon-box blue">
+        <dh-icon name="package"></dh-icon>
+      </div>
+      <div class="tile-info">
+        <h4 class="tile-title">Track All Packages</h4>
+        <p class="tile-desc">{{ allPackages().length }} total shipments in your history</p>
+      </div>
+      <div class="tile-arrow">&rarr;</div>
+    </a>
+
+    <a routerLink="/customer/profile" class="card quick-tile">
+      <div class="tile-icon-box green">
+        <dh-icon name="shield"></dh-icon>
+      </div>
+      <div class="tile-info">
+        <h4 class="tile-title">Verified Proof of Delivery</h4>
+        <p class="tile-desc">Tamper-evident photo &amp; OTP audit receipts</p>
+      </div>
+      <div class="tile-arrow">&rarr;</div>
+    </a>
+  </div>
+
+  <!-- 3. Shift / Shipment Summary Metrics -->
+  <div class="metrics-strip">
+    <dh-stat-card label="Active Shipments" [value]="activeCount()" icon="truck" tone="neutral" hint="Currently moving"></dh-stat-card>
+    <dh-stat-card label="Awaiting Dispatch" [value]="pendingCount()" icon="clock" tone="neutral" hint="Looking for courier"></dh-stat-card>
+    <dh-stat-card label="Delivered Safely" [value]="deliveredCount()" icon="check" tone="success" hint="Completed orders"></dh-stat-card>
+  </div>
+
+  <!-- 4. Recent Deliveries Feed (Order Card Style) -->
+  <div class="card recent-section-card">
+    <div class="section-top-header">
+      <div>
+        <h3 class="recent-title">Recent Delivery Activity</h3>
+        <p class="recent-sub">Real-time status of your recent shipments</p>
+      </div>
+      <a routerLink="/customer/deliveries" class="btn btn-secondary btn-sm">
+        <span>View Full History</span>
+        <dh-icon name="arrow-right"></dh-icon>
+      </a>
+    </div>
+
+    @if (recentPackages().length === 0) {
+      <dh-empty-state title="No orders placed yet" description="Send your first parcel to begin tracking in real time.">
+        <a routerLink="/customer/create-delivery" class="btn btn-primary btn-sm">Send a Parcel</a>
+      </dh-empty-state>
+    } @else {
+      <div class="order-cards-list">
+        @for (pkg of recentPackages(); track pkg.id) {
+          <div class="order-item-row">
+            <div class="order-icon-badge">
+              <dh-icon name="package"></dh-icon>
+            </div>
+            <div class="order-main-info">
+              <div class="order-header-line">
+                <span class="tracking-code font-mono">{{ pkg.trackingNumber }}</span>
+                <span class="bullet">&bull;</span>
+                <span class="pkg-type">{{ pkg.packageType }} ({{ pkg.weight }}kg)</span>
+              </div>
+              <div class="order-route-line">
+                <span class="route-point">{{ pkg.sourceLocation.city }}</span>
+                <span class="route-arrow">&rarr;</span>
+                <span class="route-point bold">{{ pkg.destinationLocation.city }}</span>
+                <span class="order-date">&bull; {{ pkg.scheduledDate | date: 'MMM d, h:mm a' }}</span>
+              </div>
+            </div>
+            <div class="order-status-box">
+              <dh-status-badge [status]="pkg.status"></dh-status-badge>
+            </div>
+            <div class="order-action-box">
+              <a [routerLink]="['/customer/deliveries', pkg.id]" class="btn btn-secondary btn-sm track-pill-btn">
+                <span>Track Details</span>
+                <dh-icon name="arrow-right"></dh-icon>
+              </a>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+}
