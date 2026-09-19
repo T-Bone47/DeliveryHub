@@ -301,20 +301,41 @@ import { IconComponent } from '../../../shared/components/icon.component';
     }
 
     .portal-card {
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
       border-radius: var(--radius-lg);
       padding: var(--space-8) var(--space-7);
       display: flex;
       flex-direction: column;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       position: relative;
+      box-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03);
     }
 
     .portal-card:hover {
+      box-shadow: 0 16px 36px -6px rgba(15, 23, 42, 0.1), 0 4px 12px rgba(15, 23, 42, 0.04);
+      transform: translateY(-3px);
+    }
+
+    .customer-card {
+      border-color: #e2e8f0;
+    }
+    .customer-card:hover {
       border-color: var(--color-primary);
-      box-shadow: 0 10px 28px -4px rgba(15, 23, 42, 0.08);
-      transform: translateY(-2px);
+    }
+
+    .agent-card {
+      border-color: #e2e8f0;
+    }
+    .agent-card:hover {
+      border-color: #2563eb;
+    }
+
+    .admin-card {
+      border-color: #e2e8f0;
+    }
+    .admin-card:hover {
+      border-color: #475569;
     }
 
     .card-top {
@@ -442,12 +463,12 @@ import { IconComponent } from '../../../shared/components/icon.component';
 
     /* Demo Drawer */
     .demo-drawer {
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: var(--radius-lg);
       overflow: hidden;
       margin-top: var(--space-4);
-      box-shadow: var(--shadow-sm);
+      box-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
     }
 
     .demo-drawer-toggle {
@@ -455,11 +476,11 @@ import { IconComponent } from '../../../shared/components/icon.component';
       display: flex;
       align-items: center;
       gap: var(--space-2);
-      padding: 12px 18px;
+      padding: 13px 20px;
       background: #f8fafc;
       border: none;
       cursor: pointer;
-      font-size: 13px;
+      font-size: 13.5px;
       font-weight: 600;
       color: var(--color-text);
       text-align: left;
@@ -480,8 +501,9 @@ import { IconComponent } from '../../../shared/components/icon.component';
     }
 
     .demo-drawer-body {
-      padding: var(--space-5);
-      border-top: 1px solid var(--color-border);
+      padding: var(--space-5) var(--space-6);
+      border-top: 1px solid #e2e8f0;
+      background: #ffffff;
     }
 
     .demo-grid {
@@ -492,12 +514,19 @@ import { IconComponent } from '../../../shared/components/icon.component';
 
     .demo-card {
       background: #f8fafc;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-sm);
-      padding: var(--space-4);
+      border: 1px solid #e2e8f0;
+      border-radius: var(--radius-md);
+      padding: var(--space-4) var(--space-5);
       display: flex;
       flex-direction: column;
       gap: var(--space-2);
+      transition: all 0.2s ease;
+    }
+
+    .demo-card:hover {
+      background: #ffffff;
+      border-color: #cbd5e1;
+      box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06);
     }
 
     .demo-card-head {
